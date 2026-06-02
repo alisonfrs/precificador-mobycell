@@ -1,0 +1,8 @@
+{
+  "name": "precificador-mobycell",
+  "version": "1.0.0",
+  "main": "local-server.js",
+  "scripts": {
+    "start": "node local-server.js"
+  }
+}

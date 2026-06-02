@@ -1,0 +1,1529 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Precificador de Pecas</title>
+  <style>
+    :root {
+      --bg: #f5f6f7;
+      --surface: #ffffff;
+      --surface-2: #eef3f1;
+      --text: #17201c;
+      --muted: #63706b;
+      --line: #d9e0dc;
+      --green: #05745f;
+      --green-dark: #045745;
+      --amber: #b86b00;
+      --red: #b42318;
+      --blue: #255c99;
+      --shadow: 0 12px 28px rgba(17, 24, 39, .08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .locked .app-shell {
+      display: none;
+    }
+
+    .login-overlay {
+      display: none;
+      min-height: 100vh;
+      padding: 24px;
+      background: var(--bg);
+      place-items: center;
+    }
+
+    .locked .login-overlay {
+      display: grid;
+    }
+
+    .login-box {
+      width: min(420px, 100%);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .login-box h1 {
+      color: var(--text);
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .login-box p {
+      color: var(--muted);
+      margin: 0 0 16px;
+      line-height: 1.45;
+    }
+
+    .login-error {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--red);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .employee-mode .manager-only,
+    .employee-mode .sensitive {
+      display: none !important;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #ffffff;
+      background: var(--green);
+    }
+
+    button:hover {
+      background: var(--green-dark);
+    }
+
+    button.secondary {
+      color: var(--green-dark);
+      background: #e2efeb;
+    }
+
+    button.secondary:hover {
+      background: #d3e6df;
+    }
+
+    button.neutral {
+      color: #27312d;
+      background: #e4e8e6;
+    }
+
+    button.neutral:hover {
+      background: #d6ddda;
+    }
+
+    .app-header {
+      background: #0d3f35;
+      color: #ffffff;
+      padding: 22px 18px;
+      border-bottom: 5px solid #d7952a;
+    }
+
+    .header-inner,
+    .main,
+    .rules-band {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+    }
+
+    .brand-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .today {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, .12);
+      color: #f7faf8;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 18px;
+      padding: 18px 0 26px;
+      align-items: start;
+    }
+
+    .panel,
+    .summary {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 16px;
+    }
+
+    .panel + .panel {
+      margin-top: 14px;
+    }
+
+    .summary {
+      position: sticky;
+      top: 14px;
+      overflow: hidden;
+    }
+
+    .summary-head {
+      padding: 14px 16px;
+      background: #f0f4f2;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .summary-body {
+      padding: 16px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.3;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .search-grid {
+      display: grid;
+      grid-template-columns: 210px minmax(0, 1fr) 150px;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .search-status {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    label {
+      display: block;
+      color: #33413b;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #cfd8d4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--text);
+      outline: none;
+    }
+
+    input,
+    select {
+      min-height: 42px;
+      padding: 9px 10px;
+    }
+
+    textarea {
+      min-height: 190px;
+      resize: vertical;
+      padding: 12px;
+      line-height: 1.45;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(5, 116, 95, .14);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfc;
+      min-height: 76px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .result-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .count-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .parts {
+      display: grid;
+      gap: 10px;
+    }
+
+    .part-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 145px 145px;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #ffffff;
+    }
+
+    .part-card:hover {
+      border-color: #9ec6b9;
+      box-shadow: 0 8px 20px rgba(8, 64, 53, .08);
+    }
+
+    .part-card.selected {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(5, 116, 95, .13);
+    }
+
+    .part-name {
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #edf2f7;
+      color: #34403b;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag.quality {
+      background: #e7f1ee;
+      color: #075d4d;
+    }
+
+    .tag.aro {
+      background: #f8eddb;
+      color: #764800;
+    }
+
+    .price-box {
+      border-left: 1px solid var(--line);
+      padding-left: 12px;
+    }
+
+    .price-label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .cost {
+      color: #2c3b35;
+      font-size: 18px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .sale {
+      color: var(--green-dark);
+      font-size: 20px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .admin {
+      color: var(--red);
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .empty {
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed #bdc8c3;
+      border-radius: 8px;
+      color: var(--muted);
+      text-align: center;
+      padding: 22px;
+      background: #fbfcfc;
+    }
+
+    .selected-title {
+      margin: 0 0 10px;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      color: #33413b;
+    }
+
+    .summary-line strong {
+      white-space: nowrap;
+    }
+
+    .cash-total {
+      margin: 14px 0;
+      padding: 14px;
+      border-radius: 8px;
+      background: #e8f4f0;
+      color: #064b3e;
+    }
+
+    .cash-total span {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .cash-total strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .installments {
+      display: grid;
+      gap: 8px;
+      margin: 10px 0 14px;
+    }
+
+    .installment {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr) 96px;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 10px;
+      background: #ffffff;
+    }
+
+    .installment b {
+      color: var(--blue);
+    }
+
+    .installment small {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .copy-msg {
+      min-height: 22px;
+      color: var(--green-dark);
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .rules-section {
+      background: #ffffff;
+      border-top: 1px solid var(--line);
+      padding: 18px 0 24px;
+    }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .rule {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfc;
+    }
+
+    .rule span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .rule strong {
+      font-size: 18px;
+    }
+
+    .manual-grid {
+      display: grid;
+      grid-template-columns: 1fr 150px;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .notice {
+      margin-top: 12px;
+      border-left: 4px solid var(--amber);
+      padding: 10px 12px;
+      background: #fff7eb;
+      color: #5f3900;
+      border-radius: 0 8px 8px 0;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 980px) {
+      .main {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        position: static;
+      }
+
+      .field-grid,
+      .status-grid,
+      .rules-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      h1 {
+        font-size: 24px;
+      }
+
+      .field-grid,
+      .search-grid,
+      .status-grid,
+      .rules-grid,
+      .manual-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .part-card {
+        grid-template-columns: 1fr;
+      }
+
+      .price-box {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+        padding: 10px 0 0;
+      }
+
+      .installment {
+        grid-template-columns: 48px 1fr;
+      }
+
+      .installment small {
+        grid-column: 2;
+      }
+    }
+  </style>
+</head>
+<body class="locked">
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+      <h1>Acesso do gestor</h1>
+      <p>Digite a senha para ver custos e ferramentas administrativas.</p>
+      <label for="managerPassword">Senha</label>
+      <input id="managerPassword" type="password" inputmode="numeric" autocomplete="current-password">
+      <div class="actions">
+        <button id="loginBtn">Entrar</button>
+      </div>
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+
+  <div class="app-shell" id="appShell">
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-row">
+        <h1>Precificador de Servicos</h1>
+        <div class="today" id="today"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section>
+      <div class="panel">
+        <h2>Buscar no fornecedor</h2>
+        <div class="search-grid">
+          <div>
+            <label for="partType">Tipo da peca</label>
+            <select id="partType">
+              <option value="frontal">Frontal / Tela</option>
+              <option value="carga">Carga</option>
+              <option value="bateria">Bateria</option>
+            </select>
+          </div>
+          <div>
+            <label for="modelInput">Modelo do celular</label>
+            <input id="modelInput" type="search" placeholder="Ex: moto g24">
+          </div>
+          <button id="autoSearchBtn">Buscar</button>
+        </div>
+        <div class="field-grid" id="chargeOptions" hidden>
+          <div>
+            <label for="chargeKind">Tipo do conector</label>
+            <select id="chargeKind">
+              <option value="v8">V8 - cliente paga R$ 120,00</option>
+              <option value="tipo-c">Tipo C - cliente paga R$ 180,00</option>
+            </select>
+          </div>
+        </div>
+        <div class="search-status" id="searchStatus"></div>
+      </div>
+
+      <div class="panel manager-only">
+        <h2>Lista recebida</h2>
+        <textarea id="supplierText" spellcheck="false" placeholder="Cole aqui a resposta do bot com a lista de pecas e valores."></textarea>
+        <div class="actions">
+          <button id="parseBtn">Atualizar lista</button>
+          <button class="secondary" id="sampleBtn">Carregar exemplo</button>
+          <button class="neutral" id="clearBtn">Limpar</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Filtros</h2>
+        <div class="field-grid">
+          <div>
+            <label for="termFilter">Modelo ou palavra</label>
+            <input id="termFilter" type="search" placeholder="Ex: G24, A14, iPhone">
+          </div>
+          <div>
+            <label for="qualityFilter">Qualidade</label>
+            <select id="qualityFilter">
+              <option value="">Todas</option>
+              <option value="Premium Vivid">Premium Vivid</option>
+              <option value="Original CN">Original CN</option>
+              <option value="Premium WK">Premium WK</option>
+              <option value="Original NN">Original NN</option>
+              <option value="Nacional Wefix">Nacional Wefix</option>
+              <option value="Outras">Outras</option>
+            </select>
+          </div>
+          <div>
+            <label for="aroFilter">Aro</label>
+            <select id="aroFilter">
+              <option value="">Todos</option>
+              <option value="Com aro">Com aro</option>
+              <option value="Sem aro">Sem aro</option>
+              <option value="Nao informado">Nao informado</option>
+            </select>
+          </div>
+        </div>
+        <div class="status-grid">
+          <div class="metric">
+            <span>Itens unicos</span>
+            <strong id="metricTotal">0</strong>
+          </div>
+          <div class="metric">
+            <span>Filtrados</span>
+            <strong id="metricFiltered">0</strong>
+          </div>
+          <div class="metric sensitive">
+            <span>Menor custo</span>
+            <strong id="metricMin">R$ 0,00</strong>
+          </div>
+          <div class="metric sensitive">
+            <span>Maior custo</span>
+            <strong id="metricMax">R$ 0,00</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="result-top">
+          <h2>Resultado</h2>
+          <span class="count-label" id="resultLabel">Nenhuma peca carregada</span>
+        </div>
+        <div class="parts" id="partsList"></div>
+      </div>
+
+      <div class="panel manager-only">
+        <h2>Calculo manual</h2>
+        <div class="manual-grid">
+          <div>
+            <label for="manualCost">Custo da peca</label>
+            <input id="manualCost" inputmode="decimal" placeholder="Ex: 137,00">
+          </div>
+          <button id="manualBtn">Calcular</button>
+        </div>
+        <div class="notice" id="manualResult">Mao de obra minima considerada nos pacotes: R$ 120,00.</div>
+      </div>
+    </section>
+
+    <aside class="summary">
+      <div class="summary-head">
+        <h2>Orcamento</h2>
+      </div>
+      <div class="summary-body" id="quoteBox">
+        <div class="empty">Selecione uma peca para montar o orcamento.</div>
+      </div>
+    </aside>
+  </main>
+
+  <section class="rules-section manager-only">
+    <div class="rules-band">
+      <h2>Tabela de venda a vista</h2>
+      <div class="rules-grid" id="rulesGrid"></div>
+      <div class="notice">Consultar administrador quando passar do limite: tela acima de R$ 300,00, carga V8 acima de R$ 80,00, carga Tipo C acima de R$ 50,00 e bateria acima de R$ 150,00.</div>
+    </div>
+  </section>
+  </div>
+
+  <script>
+    const appMode = location.pathname.toLowerCase().includes('funcionario') ? 'employee' : 'manager';
+    const managerPassword = '3011';
+
+    const sampleText = `No | ID | NOME PRODUTO | VALOR
+--------------------------------------
+1 - 37062 - FRONTAL MOTOROLA G04 / G04S / G24
+SEM ARO PREMIUM VIVID
+- [R$ 75,00]
+2 - 36305 - FRONTAL MOTOROLA G04 / G04S / G24
+SEM ARO ORIGINAL CN
+- [R$ 63,00]
+3 - 30603 - FRONTAL MOTOROLA G24 / G24 POWER
+COM ARO PREMIUM VIVID
+- [R$ 105,00]
+4 - 26219 - FRONTAL MOTOROLA G04 / G04S / G24 / E14 *SEM ARO PREMIUM WK * ( K3087 ) - [R$ 92,00]
+5 - 21080 - FRONTAL MOTOROLA G24 / G24 POWER
+COM ARO ORIGINAL NN
+( M3157 ) - [R$ 97,00]
+6 - 21077 - FRONTAL MOTOROLA G04 / G04S / G24 / E14
+SEM ARO ORIGINAL NN
+( M3156 ) - [R$ 82,00]
+7 - 20969 - FRONTAL MOTOROLA G24 / G24 POWER
+COM ARO NACIONAL WEFIX
+( W3163 ) - [R$ 137,00]
+8 - 19771 - FRONTAL MOTOROLA G24 / G24 POWER
+COM ARO PREMIUM WK
+( K3054 ) - [R$ 122,00]
+9 - 19390 - FRONTAL MOTOROLA G04 / G04S / G24
+SEM ARO NACIONAL WEFIX
+( W3164 ) - [R$ 117,00]`;
+
+    const pricingRules = [
+      { label: 'Abaixo de R$ 100,00', test: cost => cost < 100, sale: 250 },
+      { label: 'Ate R$ 120,00', test: cost => cost <= 120, sale: 270 },
+      { label: 'Ate R$ 140,00', test: cost => cost <= 140, sale: 300 },
+      { label: 'Ate R$ 150,00', test: cost => cost <= 150, sale: 350 },
+      { label: 'Ate R$ 180,00', test: cost => cost <= 180, sale: 380 },
+      { label: 'Ate R$ 200,00', test: cost => cost <= 200, sale: 450 },
+      { label: 'Ate R$ 250,00', test: cost => cost <= 250, sale: 570 },
+      { label: 'Ate R$ 300,00', test: cost => cost <= 300, sale: 650 }
+    ];
+
+    const batteryPricingRules = [
+      { label: 'Bateria ate R$ 50,00', test: cost => cost <= 50, sale: 170 },
+      { label: 'Bateria ate R$ 60,00', test: cost => cost <= 60, sale: 180 },
+      { label: 'Bateria ate R$ 70,00', test: cost => cost <= 70, sale: 190 },
+      { label: 'Bateria ate R$ 100,00', test: cost => cost <= 100, sale: 230 },
+      { label: 'Bateria ate R$ 120,00', test: cost => cost <= 120, sale: 250 },
+      { label: 'Bateria ate R$ 150,00', test: cost => cost <= 150, sale: 300 }
+    ];
+
+    const chargePricing = {
+      v8: { label: 'V8' },
+      'tipo-c': { label: 'Tipo C', sale: 180 }
+    };
+
+    const cardRates = {
+      1: 3.89,
+      2: 7.39,
+      3: 8.67,
+      4: 9.33,
+      5: 10.20
+    };
+
+    const state = {
+      parts: [],
+      filtered: [],
+      selectedKey: ''
+    };
+
+    const $ = selector => document.querySelector(selector);
+
+    const els = {
+      supplierText: $('#supplierText'),
+      parseBtn: $('#parseBtn'),
+      sampleBtn: $('#sampleBtn'),
+      clearBtn: $('#clearBtn'),
+      partType: $('#partType'),
+      chargeKind: $('#chargeKind'),
+      chargeOptions: $('#chargeOptions'),
+      modelInput: $('#modelInput'),
+      autoSearchBtn: $('#autoSearchBtn'),
+      searchStatus: $('#searchStatus'),
+      termFilter: $('#termFilter'),
+      qualityFilter: $('#qualityFilter'),
+      aroFilter: $('#aroFilter'),
+      partsList: $('#partsList'),
+      resultLabel: $('#resultLabel'),
+      metricTotal: $('#metricTotal'),
+      metricFiltered: $('#metricFiltered'),
+      metricMin: $('#metricMin'),
+      metricMax: $('#metricMax'),
+      quoteBox: $('#quoteBox'),
+      rulesGrid: $('#rulesGrid'),
+      manualCost: $('#manualCost'),
+      manualBtn: $('#manualBtn'),
+      manualResult: $('#manualResult'),
+      today: $('#today'),
+      loginBtn: $('#loginBtn'),
+      managerPassword: $('#managerPassword'),
+      loginError: $('#loginError')
+    };
+
+    function unlockApp() {
+      document.body.classList.remove('locked');
+      document.body.classList.toggle('employee-mode', appMode === 'employee');
+    }
+
+    function setupAccess() {
+      if (appMode === 'employee') {
+        unlockApp();
+        return;
+      }
+
+      els.managerPassword.focus();
+      els.loginBtn.addEventListener('click', () => {
+        if (els.managerPassword.value === managerPassword) {
+          els.loginError.textContent = '';
+          unlockApp();
+          return;
+        }
+        els.loginError.textContent = 'Senha incorreta.';
+        els.managerPassword.value = '';
+        els.managerPassword.focus();
+      });
+      els.managerPassword.addEventListener('keydown', event => {
+        if (event.key === 'Enter') els.loginBtn.click();
+      });
+    }
+
+    function formatBRL(value) {
+      return value.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+    }
+
+    function parseMoney(value) {
+      if (typeof value === 'number') return value;
+      const normalized = String(value || '')
+        .replace(/[^\d,.-]/g, '')
+        .replace(/\./g, '')
+        .replace(',', '.');
+      const number = Number(normalized);
+      return Number.isFinite(number) ? number : 0;
+    }
+
+    function normalize(text) {
+      return String(text || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase();
+    }
+
+    function cleanProductName(text) {
+      return String(text || '')
+        .replace(/\[\s*R\$\s*[\d.,]+\s*\]/gi, '')
+        .replace(/-\s*R\$\s*[\d.,]+/gi, '')
+        .replace(/\s+-\s*$/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/\s+\*/g, ' *')
+        .replace(/\*\s+/g, '* ')
+        .trim();
+    }
+
+    function classifyQuality(name) {
+      const n = normalize(name);
+      if (n.includes('VIVID')) return 'Premium Vivid';
+      if (n.includes('WEFIX')) return 'Nacional Wefix';
+      if (n.includes('PREMIUM WK') || n.includes('( K')) return 'Premium WK';
+      if (n.includes('ORIGINAL NN') || n.includes('( M')) return 'Original NN';
+      if (n.includes('ORIGINAL CN') || /\bCN\b/.test(n)) return 'Original CN';
+      return 'Outras';
+    }
+
+    function classifyAro(name) {
+      const n = normalize(name);
+      if (n.includes('SEM ARO')) return 'Sem aro';
+      if (n.includes('COM ARO')) return 'Com aro';
+      return 'Nao informado';
+    }
+
+    function shouldHidePart(name) {
+      const n = normalize(name);
+      return n.includes('FRONTAL VIDRO COM COLA OCA') || n.includes('VIDRO COM COLA OCA');
+    }
+
+    function getSalePrice(cost) {
+      const type = els.partType.value;
+      if (type === 'frontal') {
+        const rule = pricingRules.find(item => item.test(cost));
+        return rule ? rule.sale : null;
+      }
+      if (type === 'carga') {
+        if (els.chargeKind.value === 'v8') {
+          if (cost <= 40) return Math.max(120, cost + 100);
+          if (cost <= 80) return cost + 120;
+          return null;
+        }
+        return cost <= 50 ? chargePricing['tipo-c'].sale : null;
+      }
+      if (type === 'bateria') {
+        const rule = batteryPricingRules.find(item => item.test(cost));
+        return rule ? rule.sale : null;
+      }
+      return null;
+    }
+
+    function hasPricingRule() {
+      return ['frontal', 'carga', 'bateria'].includes(els.partType.value);
+    }
+
+    function getCurrentPartTypeLabel() {
+      const selected = els.partType.options[els.partType.selectedIndex];
+      return selected ? selected.textContent : '';
+    }
+
+    function getChargeKindLabel() {
+      const selected = chargePricing[els.chargeKind.value] || chargePricing.v8;
+      return selected.label;
+    }
+
+    function getAdminMessage() {
+      if (els.partType.value === 'carga') {
+        if (els.chargeKind.value === 'v8') {
+          return 'Custo acima de R$ 80,00 para V8. Consulte um administrador.';
+        }
+        return 'Custo acima de R$ 50,00 para Tipo C. Consulte um administrador.';
+      }
+      if (els.partType.value === 'bateria') {
+        return 'Custo acima de R$ 150,00. Consulte um administrador.';
+      }
+      return 'Custo acima de R$ 300,00. Consulte um administrador.';
+    }
+
+    function canShowCost() {
+      return appMode === 'manager';
+    }
+
+    function costSummaryRow(part) {
+      return canShowCost()
+        ? `<div class="summary-line sensitive"><span>Custo</span><strong>${formatBRL(part.cost)}</strong></div>`
+        : '';
+    }
+
+    function getMaxInstallments(cashPrice) {
+      if (!cashPrice) return 0;
+      if (cashPrice <= 350) return 3;
+      if (cashPrice <= 450) return 4;
+      if (cashPrice <= 650) return 5;
+      return 0;
+    }
+
+    function calculateInstallments(cashPrice) {
+      const max = getMaxInstallments(cashPrice);
+      return Array.from({ length: max }, (_, index) => {
+        const installments = index + 1;
+        const rate = cardRates[installments];
+        const total = cashPrice * (1 + rate / 100);
+        return {
+          installments,
+          rate,
+          total,
+          each: total / installments
+        };
+      });
+    }
+
+    function parseSupplierList(text) {
+      const lines = String(text || '')
+        .replace(/\r/g, '\n')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean);
+
+      const records = [];
+      let current = null;
+
+      function finishCurrent() {
+        if (!current) return;
+        const combined = current.parts.join(' ');
+        const priceMatch = combined.match(/R\$\s*([\d.]+,\d{2})/i);
+        if (!priceMatch) {
+          current = null;
+          return;
+        }
+
+        const name = cleanProductName(combined);
+        const cost = parseMoney(priceMatch[1]);
+        if (!name || !cost) {
+          current = null;
+          return;
+        }
+        if (shouldHidePart(name)) {
+          current = null;
+          return;
+        }
+
+        records.push({
+          number: current.number,
+          id: current.id,
+          name,
+          cost,
+          quality: classifyQuality(name),
+          aro: classifyAro(name)
+        });
+        current = null;
+      }
+
+      lines.forEach(line => {
+        if (/^(no|n[ºo]\s*\||id\s*\||[-]{3,}|deseja|buscar outro|fazer pedido|encerrar)/i.test(line)) return;
+        const start = line.match(/^(\d+)\s*-\s*(\d+)\s*-\s*(.+)$/);
+        if (start) {
+          finishCurrent();
+          current = {
+            number: Number(start[1]),
+            id: start[2],
+            parts: [start[3]]
+          };
+          if (/R\$\s*[\d.]+,\d{2}/i.test(start[3])) finishCurrent();
+          return;
+        }
+        if (current) {
+          current.parts.push(line);
+          if (/R\$\s*[\d.]+,\d{2}/i.test(line)) finishCurrent();
+        }
+      });
+
+      finishCurrent();
+
+      const unique = new Map();
+      records.forEach(part => {
+        const key = `${part.id}|${normalize(part.name)}|${part.cost.toFixed(2)}`;
+        if (!unique.has(key)) unique.set(key, { ...part, key });
+      });
+
+      return Array.from(unique.values()).sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
+    }
+
+    function updateMetrics() {
+      const costs = state.filtered.map(part => part.cost);
+      els.metricTotal.textContent = state.parts.length;
+      els.metricFiltered.textContent = state.filtered.length;
+      els.metricMin.textContent = costs.length ? formatBRL(Math.min(...costs)) : 'R$ 0,00';
+      els.metricMax.textContent = costs.length ? formatBRL(Math.max(...costs)) : 'R$ 0,00';
+      els.resultLabel.textContent = state.filtered.length
+        ? `${state.filtered.length} item(ns) prontos para precificar`
+        : 'Nenhuma peca encontrada';
+    }
+
+    function applyFilters() {
+      const term = normalize(els.termFilter.value);
+      const quality = els.qualityFilter.value;
+      const aro = els.aroFilter.value;
+
+      state.filtered = state.parts.filter(part => {
+        const termOk = !term || normalize(`${part.name} ${part.id}`).includes(term);
+        const qualityOk = !quality || part.quality === quality;
+        const aroOk = !aro || part.aro === aro;
+        return termOk && qualityOk && aroOk;
+      });
+
+      if (!state.filtered.some(part => part.key === state.selectedKey)) {
+        state.selectedKey = state.filtered[0] ? state.filtered[0].key : '';
+      }
+
+      renderParts();
+      updateMetrics();
+      renderQuote();
+    }
+
+    function renderParts() {
+      if (!state.filtered.length) {
+        els.partsList.innerHTML = '<div class="empty">Cole a lista do fornecedor ou ajuste os filtros.</div>';
+        return;
+      }
+
+      els.partsList.innerHTML = state.filtered.map(part => {
+        const sale = hasPricingRule() ? getSalePrice(part.cost) : null;
+        let saleHtml = '<span class="admin">Regra pendente</span>';
+        if (hasPricingRule()) {
+          saleHtml = sale
+            ? `<span class="sale">${formatBRL(sale)}</span>`
+            : '<span class="admin">Consultar administrador</span>';
+        }
+        return `
+          <article class="part-card ${part.key === state.selectedKey ? 'selected' : ''}" data-key="${part.key}">
+            <div>
+              <p class="part-name">${escapeHtml(part.name)}</p>
+              <div class="tags">
+                <span class="tag">ID ${escapeHtml(part.id)}</span>
+                <span class="tag quality">${escapeHtml(part.quality)}</span>
+                <span class="tag aro">${escapeHtml(part.aro)}</span>
+              </div>
+            </div>
+            <div class="price-box sensitive">
+              <span class="price-label">Custo</span>
+              <span class="cost">${formatBRL(part.cost)}</span>
+            </div>
+            <div class="price-box">
+              <span class="price-label">Cliente a vista</span>
+              ${saleHtml}
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      els.partsList.querySelectorAll('.part-card').forEach(card => {
+        card.addEventListener('click', () => {
+          state.selectedKey = card.dataset.key;
+          renderParts();
+          renderQuote();
+        });
+      });
+    }
+
+    function quoteExtraRows() {
+      const typeRows = [
+        `<div class="summary-line"><span>Tipo</span><strong>${escapeHtml(getCurrentPartTypeLabel())}</strong></div>`
+      ];
+      if (els.partType.value === 'carga') {
+        typeRows.push(`<div class="summary-line"><span>Conector</span><strong>${escapeHtml(getChargeKindLabel())}</strong></div>`);
+      }
+      return typeRows.join('');
+    }
+
+    function renderQuote() {
+      const part = state.parts.find(item => item.key === state.selectedKey);
+      if (!part) {
+        els.quoteBox.innerHTML = '<div class="empty">Selecione uma peca para montar o orcamento.</div>';
+        return;
+      }
+
+      const sale = hasPricingRule() ? getSalePrice(part.cost) : null;
+      if (!hasPricingRule()) {
+        els.quoteBox.innerHTML = `
+          <h3 class="selected-title">${escapeHtml(part.name)}</h3>
+          <div class="summary-line"><span>ID</span><strong>${escapeHtml(part.id)}</strong></div>
+          ${costSummaryRow(part)}
+          <div class="summary-line"><span>Qualidade</span><strong>${escapeHtml(part.quality)}</strong></div>
+          <div class="summary-line"><span>Aro</span><strong>${escapeHtml(part.aro)}</strong></div>
+          ${quoteExtraRows()}
+          <div class="notice">Regra de venda para carga e bateria sera configurada depois.</div>
+        `;
+        return;
+      }
+      if (!sale) {
+        els.quoteBox.innerHTML = `
+          <h3 class="selected-title">${escapeHtml(part.name)}</h3>
+          <div class="summary-line"><span>ID</span><strong>${escapeHtml(part.id)}</strong></div>
+          ${costSummaryRow(part)}
+          <div class="summary-line"><span>Qualidade</span><strong>${escapeHtml(part.quality)}</strong></div>
+          <div class="summary-line"><span>Aro</span><strong>${escapeHtml(part.aro)}</strong></div>
+          ${quoteExtraRows()}
+          <div class="notice">${escapeHtml(getAdminMessage())}</div>
+        `;
+        return;
+      }
+
+      const installments = calculateInstallments(sale);
+      const max = installments.length ? installments[installments.length - 1] : null;
+      els.quoteBox.innerHTML = `
+        <h3 class="selected-title">${escapeHtml(part.name)}</h3>
+        <div class="summary-line"><span>ID</span><strong>${escapeHtml(part.id)}</strong></div>
+        ${costSummaryRow(part)}
+        <div class="summary-line"><span>Qualidade</span><strong>${escapeHtml(part.quality)}</strong></div>
+        <div class="summary-line"><span>Aro</span><strong>${escapeHtml(part.aro)}</strong></div>
+        ${quoteExtraRows()}
+        <div class="cash-total">
+          <span>Pix ou dinheiro</span>
+          <strong>${formatBRL(sale)}</strong>
+        </div>
+        <h3>Cartao sem juros</h3>
+        <div class="installments">
+          ${installments.map(row => `
+            <div class="installment">
+              <b>${row.installments}x</b>
+              <span>${formatBRL(row.each)}</span>
+              <small>Total ${formatBRL(row.total)}</small>
+            </div>
+          `).join('')}
+        </div>
+        <button id="copyQuoteBtn">Copiar orcamento</button>
+        <div class="copy-msg" id="copyMsg"></div>
+      `;
+
+      $('#copyQuoteBtn').addEventListener('click', () => copyQuote(part, sale, max));
+    }
+
+    function copyQuote(part, sale, max) {
+      const parcelText = max
+        ? `Cartao sem juros: ate ${max.installments}x de ${formatBRL(max.each)}.`
+        : 'Cartao: consultar condicao.';
+      const text = [
+        `Peca: ${part.name}`,
+        `Tipo: ${getCurrentPartTypeLabel()}`,
+        els.partType.value === 'carga' ? `Conector: ${getChargeKindLabel()}` : '',
+        `Qualidade: ${part.quality}`,
+        `Aro: ${part.aro}`,
+        `Valor a vista no Pix ou dinheiro: ${formatBRL(sale)}.`,
+        parcelText
+      ].filter(Boolean).join('\n');
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          $('#copyMsg').textContent = 'Orcamento copiado.';
+        }).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const area = document.createElement('textarea');
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      area.remove();
+      const msg = $('#copyMsg');
+      if (msg) msg.textContent = 'Orcamento copiado.';
+    }
+
+    function renderRules() {
+      const allRules = [
+        ...pricingRules.map(rule => ({ label: `Tela: ${rule.label}`, sale: rule.sale })),
+        { label: 'Carga V8 ate R$ 40,00', sale: 'custo + R$ 100,00 / minimo R$ 120,00' },
+        { label: 'Carga V8 ate R$ 80,00', sale: 'custo + R$ 120,00' },
+        { label: 'Carga Tipo C ate R$ 50,00', sale: chargePricing['tipo-c'].sale },
+        ...batteryPricingRules.map(rule => ({ label: rule.label, sale: rule.sale }))
+      ];
+
+      els.rulesGrid.innerHTML = allRules.map(rule => `
+        <div class="rule">
+          <span>${rule.label}</span>
+          <strong>${typeof rule.sale === 'number' ? formatBRL(rule.sale) : escapeHtml(rule.sale)}</strong>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function parseAndRender() {
+      state.parts = parseSupplierList(els.supplierText.value);
+      state.selectedKey = '';
+      applyFilters();
+    }
+
+    function buildSupplierQuery() {
+      const type = els.partType.value;
+      const model = els.modelInput.value.trim();
+      return `${type} ${model}`.trim();
+    }
+
+    async function postTypebot(path, body) {
+      const response = await fetch(`https://bot.gestorv3.com/api/v1${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {})
+      });
+      const text = await response.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (error) {
+        data = { raw: text };
+      }
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Fornecedor recusou a busca.');
+      }
+      return data;
+    }
+
+    function richTextToText(value) {
+      const lines = [];
+
+      function walk(node) {
+        if (node == null) return;
+        if (typeof node === 'string') {
+          lines.push(node);
+          return;
+        }
+        if (Array.isArray(node)) {
+          node.forEach(walk);
+          return;
+        }
+        if (typeof node !== 'object') return;
+        if (typeof node.text === 'string') {
+          lines.push(node.text);
+        }
+        if (Array.isArray(node.children)) {
+          node.children.forEach(walk);
+          lines.push('\n');
+        }
+        if (Array.isArray(node.content)) node.content.forEach(walk);
+        if (Array.isArray(node.richText)) node.richText.forEach(walk);
+      }
+
+      walk(value);
+      return lines.join('').replace(/\n{3,}/g, '\n\n').trim();
+    }
+
+    function messageToText(message) {
+      if (!message) return '';
+      const content = message.content || message;
+      if (typeof content === 'string') return content;
+      if (typeof content.text === 'string') return content.text;
+      if (typeof content.plainText === 'string') return content.plainText;
+      if (content.richText) return richTextToText(content.richText);
+      if (content.html) {
+        const div = document.createElement('div');
+        div.innerHTML = content.html;
+        return div.textContent || '';
+      }
+      return richTextToText(content);
+    }
+
+    async function continueTypebot(sessionId, message) {
+      try {
+        return await postTypebot(`/sessions/${encodeURIComponent(sessionId)}/continueChat`, {
+          message,
+          textBubbleContentFormat: 'markdown'
+        });
+      } catch (error) {
+        return postTypebot(`/sessions/${encodeURIComponent(sessionId)}/continueChat`, {
+          message: { type: 'text', text: message },
+          textBubbleContentFormat: 'markdown'
+        });
+      }
+    }
+
+    async function searchSupplierViaTypebot(query) {
+      const started = await postTypebot('/typebots/iplay-frg-web/startChat', {
+        textBubbleContentFormat: 'markdown'
+      });
+      const sessionId = started.sessionId;
+      if (!sessionId) throw new Error('Fornecedor nao iniciou a conversa.');
+
+      await continueTypebot(sessionId, 'iplay');
+      const result = await continueTypebot(sessionId, query);
+      const rawText = (result.messages || []).map(messageToText).filter(Boolean).join('\n');
+      if (!rawText) throw new Error('Fornecedor respondeu sem lista.');
+      return rawText;
+    }
+
+    async function autoSearchSupplier() {
+      const model = els.modelInput.value.trim();
+      if (!model) {
+        els.searchStatus.textContent = 'Digite o modelo do celular.';
+        els.modelInput.focus();
+        return;
+      }
+
+      const type = els.partType.value;
+      const query = buildSupplierQuery();
+      els.autoSearchBtn.disabled = true;
+      els.autoSearchBtn.textContent = 'Buscando';
+      els.searchStatus.textContent = `Pesquisando: ${query}`;
+
+      try {
+        els.supplierText.value = await searchSupplierViaTypebot(query);
+        state.selectedKey = '';
+        parseAndRender();
+        els.searchStatus.textContent = state.parts.length
+          ? `${state.parts.length} item(ns) unico(s) encontrados.`
+          : 'Busca concluida, mas nenhuma peca foi encontrada.';
+      } catch (error) {
+        els.searchStatus.textContent = error.message;
+      } finally {
+        els.autoSearchBtn.disabled = false;
+        els.autoSearchBtn.textContent = 'Buscar';
+      }
+    }
+
+    function calculateManual() {
+      const cost = parseMoney(els.manualCost.value);
+      if (!cost) {
+        els.manualResult.textContent = 'Informe o custo da peca para calcular.';
+        return;
+      }
+      const sale = getSalePrice(cost);
+      if (!sale) {
+        els.manualResult.textContent = `${formatBRL(cost)} de custo: ${getAdminMessage()}`;
+        return;
+      }
+      const max = calculateInstallments(sale).pop();
+      const type = els.partType.value === 'carga'
+        ? `${getCurrentPartTypeLabel()} ${getChargeKindLabel()}`
+        : getCurrentPartTypeLabel();
+      els.manualResult.textContent = `${type}: ${formatBRL(cost)} de custo, ${formatBRL(sale)} a vista no Pix ou dinheiro. Cartao sem juros ate ${max.installments}x de ${formatBRL(max.each)}.`;
+    }
+
+    function setToday() {
+      const text = new Date().toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+      els.today.textContent = text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function updateTypeControls() {
+      els.chargeOptions.hidden = els.partType.value !== 'carga';
+      renderParts();
+      renderQuote();
+    }
+
+    function clearLoadedParts(message) {
+      els.supplierText.value = '';
+      state.parts = [];
+      state.filtered = [];
+      state.selectedKey = '';
+      if (message) els.searchStatus.textContent = message;
+      applyFilters();
+    }
+
+    els.parseBtn.addEventListener('click', parseAndRender);
+    els.autoSearchBtn.addEventListener('click', autoSearchSupplier);
+    els.modelInput.addEventListener('keydown', event => {
+      if (event.key === 'Enter') autoSearchSupplier();
+    });
+    els.partType.addEventListener('change', () => {
+      updateTypeControls();
+      clearLoadedParts('Digite o modelo e clique em Buscar.');
+    });
+    els.chargeKind.addEventListener('change', () => {
+      renderParts();
+      renderQuote();
+    });
+    els.sampleBtn.addEventListener('click', () => {
+      els.supplierText.value = sampleText;
+      parseAndRender();
+    });
+    els.clearBtn.addEventListener('click', () => {
+      els.supplierText.value = '';
+      state.parts = [];
+      state.filtered = [];
+      state.selectedKey = '';
+      applyFilters();
+    });
+    els.termFilter.addEventListener('input', applyFilters);
+    els.qualityFilter.addEventListener('change', applyFilters);
+    els.aroFilter.addEventListener('change', applyFilters);
+    els.manualBtn.addEventListener('click', calculateManual);
+    els.manualCost.addEventListener('keydown', event => {
+      if (event.key === 'Enter') calculateManual();
+    });
+
+    setupAccess();
+    renderRules();
+    setToday();
+    updateTypeControls();
+    applyFilters();
+  </script>
+</body>
+</html>
