@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Precificador de Peças - Moby Cell</title>
   <style>
     :root {
@@ -20,15 +20,15 @@
       --red-light: #fef2f2;
       --red-glow: rgba(220, 38, 38, 0.12);
       --red-gradient: linear-gradient(135deg, #dc2626, #b91c1c);
+      --green: #10b981;
+      --green-light: #ecfdf5;
+      --green-glow: rgba(16, 185, 129, 0.15);
       --amber: #f59e0b;
       --blue: #2563eb;
-      --purple: #7c3aed;
-      --green: #059669;
       --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
       --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
       --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
       --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
-      --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
       --radius-xs: 6px;
       --radius-sm: 10px;
       --radius: 14px;
@@ -47,6 +47,8 @@
       -webkit-font-smoothing: antialiased;
       line-height: 1.5;
       letter-spacing: -0.01em;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
 
     .employee-mode .sensitive { display: none !important; }
@@ -54,19 +56,20 @@
     button, input, select, textarea { font: inherit; letter-spacing: inherit; }
 
     button {
-      min-height: 44px;
+      min-height: 40px;
       border: none;
       border-radius: var(--radius-sm);
-      padding: 10px 20px;
+      padding: 8px 16px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       color: #ffffff;
       background: var(--red-gradient);
       transition: all var(--transition);
       position: relative;
       overflow: hidden;
       box-shadow: var(--shadow-sm);
+      white-space: nowrap;
     }
 
     button::before {
@@ -78,22 +81,15 @@
       transition: opacity var(--transition);
     }
 
-    button:hover { transform: translateY(-2px); box-shadow: var(--shadow-md), 0 0 0 4px var(--red-glow); }
+    button:hover { transform: translateY(-1px); box-shadow: var(--shadow-md), 0 0 0 3px var(--red-glow); }
     button:hover::before { opacity: 1; }
     button:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
     button:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
 
-    button.secondary {
-      color: var(--red);
-      background: var(--red-light);
-      border: 1.5px solid rgba(220, 38, 38, 0.2);
-      box-shadow: none;
-    }
-
     button.accent { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
-    button.accent:hover { box-shadow: var(--shadow-md), 0 0 0 4px rgba(37, 99, 235, 0.15); }
+    button.accent:hover { box-shadow: var(--shadow-md), 0 0 0 3px rgba(37, 99, 235, 0.15); }
 
-    /* ============ NOTIFICAÇÃO OLED ESTILO IPHONE ============ */
+    /* Notificação OLED */
     .oled-notification {
       position: fixed;
       top: -160px;
@@ -104,68 +100,56 @@
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-radius: 22px;
-      padding: 16px 22px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
-      gap: 14px;
-      min-width: 340px;
-      max-width: 440px;
+      gap: 12px;
+      min-width: 300px;
+      max-width: 400px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.12);
       transition: top 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
       pointer-events: auto;
     }
 
-    .oled-notification.show {
-      top: 16px;
-    }
-
-    .oled-notification.dismissed {
-      top: -160px;
-    }
+    .oled-notification.show { top: 12px; }
+    .oled-notification.dismissed { top: -160px; }
 
     .oled-notification .notif-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #e11d48, #be123c);
-      border-radius: 16px;
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-radius: 14px;
       display: grid;
       place-items: center;
-      font-size: 24px;
+      font-size: 22px;
       flex-shrink: 0;
-      box-shadow: 0 4px 16px rgba(225, 29, 72, 0.5);
-      animation: notif-icon-pulse 2s ease-in-out infinite;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
     }
 
-    @keyframes notif-icon-pulse {
-      0%, 100% { box-shadow: 0 4px 16px rgba(225, 29, 72, 0.5); }
-      50% { box-shadow: 0 4px 30px rgba(225, 29, 72, 0.9); }
+    .oled-notification .notif-icon.warning {
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
     }
 
-    .oled-notification .notif-content {
-      flex: 1;
-      min-width: 0;
-    }
+    .oled-notification .notif-content { flex: 1; min-width: 0; }
 
     .oled-notification .notif-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
       color: #ffffff;
-      margin-bottom: 3px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      margin-bottom: 2px;
     }
 
     .oled-notification .notif-subtitle {
-      font-size: 12px;
+      font-size: 11px;
       color: rgba(255,255,255,0.7);
       font-weight: 500;
       line-height: 1.3;
     }
 
     .oled-notification .notif-close {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       background: rgba(255,255,255,0.1);
       border: none;
       border-radius: 50%;
@@ -173,15 +157,10 @@
       cursor: pointer;
       display: grid;
       place-items: center;
-      font-size: 16px;
+      font-size: 14px;
       transition: all var(--transition);
       flex-shrink: 0;
       font-weight: 700;
-    }
-
-    .oled-notification .notif-close:hover {
-      background: rgba(255,255,255,0.2);
-      color: #fff;
     }
 
     .oled-overlay {
@@ -194,10 +173,7 @@
       transition: opacity 0.5s ease;
     }
 
-    .oled-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .oled-overlay.active { opacity: 1; pointer-events: auto; }
 
     /* Header */
     .app-header {
@@ -211,21 +187,21 @@
 
     .header-top {
       background: rgba(0,0,0,0.1);
-      padding: 8px 20px;
+      padding: 6px 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      font-size: 11px;
+      gap: 6px;
+      font-size: 10px;
       font-weight: 600;
       color: rgba(255,255,255,0.85);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
     }
 
     .header-top .dot {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       background: #4ade80;
       border-radius: 50%;
       animation: pulse-dot 2s ease-in-out infinite;
@@ -233,35 +209,35 @@
 
     @keyframes pulse-dot {
       0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6); }
-      50% { opacity: 0.7; box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
     }
 
     .header-inner {
-      max-width: 1320px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 16px 20px;
+      padding: 12px 16px;
       display: flex;
       flex-wrap: wrap;
-      gap: 16px;
+      gap: 12px;
       align-items: center;
       justify-content: space-between;
     }
 
-    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
 
     .brand-logo {
-      width: 48px;
-      height: 48px;
+      width: 38px;
+      height: 38px;
       background: #ffffff;
-      border-radius: 14px;
+      border-radius: 10px;
       display: grid;
       place-items: center;
-      font-size: 26px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-size: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
     h1 {
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 800;
       color: #ffffff;
       letter-spacing: -0.02em;
@@ -271,38 +247,38 @@
     h1 span {
       font-weight: 400;
       opacity: 0.8;
-      font-size: 16px;
+      font-size: 13px;
       display: block;
     }
 
     .today {
-      padding: 10px 18px;
+      padding: 8px 14px;
       border-radius: 50px;
       background: rgba(255, 255, 255, 0.12);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.18);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: #ffffff;
       white-space: nowrap;
     }
 
     .main-layout {
-      max-width: 1320px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 28px 20px 40px;
+      padding: 16px 12px 32px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 400px;
-      gap: 24px;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 16px;
       align-items: start;
     }
 
     .panel {
       background: var(--surface);
       border: 1px solid var(--line);
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 22px;
+      padding: 16px;
       transition: all var(--transition);
       position: relative;
       overflow: hidden;
@@ -314,7 +290,7 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 3px;
+      height: 2px;
       background: var(--red-gradient);
       opacity: 0;
       transition: opacity var(--transition);
@@ -322,158 +298,147 @@
 
     .panel:hover { box-shadow: var(--shadow-md); border-color: #d0d5dc; }
     .panel:hover::before { opacity: 1; }
-    .panel + .panel { margin-top: 16px; }
+    .panel + .panel { margin-top: 12px; }
 
     .panel-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
     .panel-icon {
-      width: 38px;
-      height: 38px;
+      width: 32px;
+      height: 32px;
       background: var(--red-light);
-      border-radius: 10px;
+      border-radius: 8px;
       display: grid;
       place-items: center;
-      font-size: 18px;
+      font-size: 16px;
       flex-shrink: 0;
     }
 
     .summary-panel {
       position: sticky;
-      top: 100px;
+      top: 80px;
       background: var(--surface);
       border: 1.5px solid var(--line);
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius);
       box-shadow: var(--shadow-lg);
       overflow: hidden;
       transition: all var(--transition);
     }
 
-    .summary-panel:hover { box-shadow: var(--shadow-xl); }
+    .summary-panel:hover { box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15); }
 
     .summary-head {
-      padding: 18px 22px;
+      padding: 14px 18px;
       background: var(--red-gradient);
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       color: #ffffff;
     }
 
     .summary-head .icon {
-      width: 40px;
-      height: 40px;
+      width: 34px;
+      height: 34px;
       background: rgba(255,255,255,0.2);
-      border-radius: 12px;
+      border-radius: 10px;
       display: grid;
       place-items: center;
-      font-size: 20px;
+      font-size: 18px;
       backdrop-filter: blur(10px);
     }
 
-    .summary-head h2 { color: #ffffff; font-size: 18px; font-weight: 700; }
-    .summary-body { padding: 22px; }
+    .summary-head h2 { color: #ffffff; font-size: 16px; font-weight: 700; }
+    .summary-body { padding: 16px; }
 
-    h2 { font-size: 17px; font-weight: 700; color: var(--text); margin: 0; }
+    h2 { font-size: 15px; font-weight: 700; color: var(--text); margin: 0; }
 
     .search-grid {
       display: grid;
-      grid-template-columns: 200px minmax(0, 1fr) auto;
-      gap: 12px;
+      grid-template-columns: 160px minmax(0, 1fr) auto;
+      gap: 10px;
       align-items: end;
     }
 
-    .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
-    .field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+    .field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 
     label {
       display: block;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       color: var(--text-secondary);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
     }
 
     input, select, textarea {
       width: 100%;
       border: 1.5px solid var(--line);
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-xs);
       background: var(--surface);
       color: var(--text);
       outline: none;
       transition: all var(--transition);
-      font-size: 14px;
+      font-size: 13px;
     }
 
-    input, select { min-height: 44px; padding: 10px 14px; }
+    input, select { min-height: 38px; padding: 8px 10px; }
 
     select {
       cursor: pointer;
       appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235f6368' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%235f6368' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 36px;
-    }
-
-    textarea {
-      min-height: 150px;
-      resize: vertical;
-      padding: 14px;
-      line-height: 1.6;
-      font-size: 13px;
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      background: var(--surface-2);
+      background-position: right 10px center;
+      padding-right: 30px;
     }
 
     input:focus, select:focus, textarea:focus {
       border-color: var(--red);
-      box-shadow: 0 0 0 4px var(--red-glow);
+      box-shadow: 0 0 0 3px var(--red-glow);
       background: #fff;
     }
 
     .search-status {
-      min-height: 22px;
-      margin-top: 10px;
-      font-size: 13px;
+      min-height: 18px;
+      margin-top: 8px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--muted);
     }
 
     .search-status.success { color: #059669; }
     .search-status.info { color: var(--text-secondary); }
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 
-    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
 
     .metric {
       background: var(--surface-2);
       border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
+      border-radius: var(--radius-xs);
+      padding: 10px 12px;
       text-align: center;
       transition: all var(--transition);
     }
 
     .metric span {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.05em;
       display: block;
     }
 
     .metric strong {
       display: block;
-      margin-top: 6px;
-      font-size: 22px;
+      margin-top: 4px;
+      font-size: 18px;
       font-weight: 800;
       color: var(--text);
       letter-spacing: -0.02em;
@@ -483,15 +448,15 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .count-badge {
-      padding: 4px 12px;
+      padding: 3px 10px;
       background: var(--red-light);
       color: var(--red);
       border-radius: 50px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       border: 1px solid rgba(220, 38, 38, 0.2);
     }
@@ -504,33 +469,34 @@
 
     .parts-list {
       display: grid;
-      gap: 10px;
-      max-height: 520px;
+      gap: 8px;
+      max-height: 420px;
       overflow-y: auto;
-      padding-right: 4px;
+      padding-right: 2px;
     }
 
-    .parts-list::-webkit-scrollbar { width: 5px; }
-    .parts-list::-webkit-scrollbar-track { background: var(--surface-2); border-radius: 3px; margin: 4px 0; }
-    .parts-list::-webkit-scrollbar-thumb { background: #c8cdd5; border-radius: 3px; }
+    .parts-list::-webkit-scrollbar { width: 4px; }
+    .parts-list::-webkit-scrollbar-track { background: var(--surface-2); border-radius: 2px; margin: 2px 0; }
+    .parts-list::-webkit-scrollbar-thumb { background: #c8cdd5; border-radius: 2px; }
 
     .part-card {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto auto;
-      gap: 16px;
+      gap: 12px;
       align-items: center;
       background: var(--surface);
       border: 1.5px solid var(--line-light);
-      border-radius: var(--radius-sm);
-      padding: 14px 18px;
+      border-radius: var(--radius-xs);
+      padding: 10px 14px;
       cursor: pointer;
       transition: all var(--transition);
       position: relative;
+      font-size: 13px;
     }
 
     .part-card:hover {
       border-color: var(--red);
-      transform: translateX(3px);
+      transform: translateX(2px);
       box-shadow: var(--shadow-md);
       background: #fff;
     }
@@ -538,37 +504,37 @@
     .part-card.selected {
       border-color: var(--red);
       background: #fff;
-      box-shadow: var(--shadow-md), 0 0 0 4px var(--red-glow);
+      box-shadow: var(--shadow-md), 0 0 0 3px var(--red-glow);
     }
 
     .part-card.selected::before {
       content: '';
       position: absolute;
       left: 0;
-      top: 8px;
-      bottom: 8px;
-      width: 4px;
+      top: 4px;
+      bottom: 4px;
+      width: 3px;
       background: var(--red-gradient);
-      border-radius: 0 4px 4px 0;
+      border-radius: 0 3px 3px 0;
     }
 
     .part-name {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--text);
-      margin-bottom: 8px;
-      line-height: 1.35;
+      margin-bottom: 5px;
+      line-height: 1.3;
     }
 
-    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 4px; }
 
     .tag {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
+      gap: 3px;
+      padding: 3px 8px;
       border-radius: 50px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       background: var(--surface-2);
       color: var(--text-secondary);
@@ -581,7 +547,14 @@
     .tag.quality-wefix { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
     .tag.quality-cn { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
 
-    .tag.oled {
+    .tag.oled-yes {
+      background: #ecfdf5;
+      color: #059669;
+      border-color: #a7f3d0;
+      font-weight: 800;
+    }
+
+    .tag.oled-no {
       background: #fff1f2;
       color: #e11d48;
       border-color: #fecdd3;
@@ -591,41 +564,41 @@
 
     @keyframes pulse-oled-tag {
       0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.3); }
-      50% { box-shadow: 0 0 0 5px rgba(225, 29, 72, 0); }
+      50% { box-shadow: 0 0 0 4px rgba(225, 29, 72, 0); }
     }
 
-    .price-box { text-align: right; min-width: 90px; }
+    .price-box { text-align: right; min-width: 80px; }
 
     .price-label {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 3px;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
     }
 
-    .sale-price { font-size: 19px; font-weight: 800; color: var(--red); letter-spacing: -0.02em; }
-    .cost-price { font-size: 15px; font-weight: 700; color: var(--text-secondary); }
+    .sale-price { font-size: 17px; font-weight: 800; color: var(--red); letter-spacing: -0.02em; }
+    .cost-price { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
 
     .selected-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 700;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       color: var(--text);
-      line-height: 1.4;
-      padding-bottom: 12px;
+      line-height: 1.3;
+      padding-bottom: 10px;
       border-bottom: 2px solid var(--line-light);
     }
 
-    .divider { height: 1px; background: var(--line-light); margin: 14px 0; }
+    .divider { height: 1px; background: var(--line-light); margin: 10px 0; }
 
     .info-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 7px 0;
-      font-size: 13px;
+      padding: 5px 0;
+      font-size: 12px;
     }
 
     .info-row .label { color: var(--text-secondary); font-weight: 500; }
@@ -634,12 +607,12 @@
     .price-card {
       background: var(--surface-2);
       border: 1.5px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px;
+      border-radius: var(--radius-sm);
+      padding: 14px;
       transition: all var(--transition);
     }
 
-    .price-card + .price-card { margin-top: 10px; }
+    .price-card + .price-card { margin-top: 8px; }
 
     .price-card.highlight {
       border-color: var(--red);
@@ -648,7 +621,7 @@
     }
 
     .price-card .big-price {
-      font-size: 36px;
+      font-size: 30px;
       font-weight: 800;
       color: var(--red);
       line-height: 1;
@@ -656,42 +629,42 @@
     }
 
     .price-card .label-sm {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       color: var(--text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 6px;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
     }
 
     .price-card .discount-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 3px 10px;
+      gap: 3px;
+      padding: 2px 8px;
       background: #dcfce7;
       color: #16a34a;
       border-radius: 50px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      margin-top: 6px;
+      margin-top: 4px;
     }
 
     .prazo-label {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       color: var(--text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
     }
 
-    .prazo-selector { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 14px; }
+    .prazo-selector { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 10px; }
 
     .prazo-btn {
-      padding: 8px 14px;
+      padding: 6px 10px;
       border-radius: 50px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       background: var(--surface-2);
       border: 1.5px solid var(--line);
@@ -707,65 +680,78 @@
       border-color: var(--red);
       color: var(--red);
       font-weight: 700;
-      box-shadow: 0 0 0 3px var(--red-glow);
+      box-shadow: 0 0 0 2px var(--red-glow);
     }
 
-    .copy-msg { min-height: 20px; margin-top: 10px; font-size: 12px; font-weight: 700; color: #059669; }
+    .copy-msg { min-height: 18px; margin-top: 8px; font-size: 11px; font-weight: 700; color: #059669; }
 
-    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
-    .empty-state .icon { font-size: 44px; margin-bottom: 12px; opacity: 0.4; }
-    .empty-state p { font-size: 13px; font-weight: 500; }
+    .empty-state { text-align: center; padding: 30px 16px; color: var(--muted); }
+    .empty-state .icon { font-size: 36px; margin-bottom: 10px; opacity: 0.4; }
+    .empty-state p { font-size: 12px; font-weight: 500; }
 
-    .welcome-message {
-      text-align: center;
-      padding: 30px 20px;
+    .welcome-message { text-align: center; padding: 24px 16px; }
+    .welcome-message .icon { font-size: 44px; margin-bottom: 12px; }
+    .welcome-message h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .welcome-message p { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+
+    /* Filtros desabilitados */
+    .filters-disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      position: relative;
     }
 
-    .welcome-message .icon {
-      font-size: 56px;
-      margin-bottom: 16px;
-    }
-
-    .welcome-message h3 {
-      font-size: 18px;
+    .filters-disabled::after {
+      content: 'Filtros não disponíveis para este tipo';
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.7);
+      font-size: 11px;
       font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
+      color: var(--muted);
+      border-radius: var(--radius-xs);
     }
 
-    .welcome-message p {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.5;
-    }
+    .filter-group { position: relative; }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1024px) {
       .main-layout { grid-template-columns: 1fr; }
       .summary-panel { position: static; }
     }
 
     @media (max-width: 768px) {
       .search-grid { grid-template-columns: 1fr 1fr; }
-      .field-grid { grid-template-columns: repeat(2, 1fr); }
+      .search-grid button { grid-column: span 2; }
+      .field-grid { grid-template-columns: 1fr 1fr; }
       .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-      .part-card { grid-template-columns: 1fr; gap: 10px; }
-      .price-box { text-align: left; }
-      h1 { font-size: 20px; }
+      .part-card { grid-template-columns: 1fr; gap: 8px; }
+      .price-box { text-align: left; display: flex; justify-content: space-between; align-items: center; }
+      h1 { font-size: 18px; }
+      .header-inner { padding: 10px 12px; }
+      .main-layout { padding: 12px 8px 24px; }
+      .panel { padding: 14px; }
     }
 
     @media (max-width: 480px) {
-      .search-grid, .field-grid, .field-grid-2 { grid-template-columns: 1fr; }
-      .header-inner { flex-direction: column; align-items: flex-start; }
+      .search-grid { grid-template-columns: 1fr; }
+      .search-grid button { grid-column: 1; }
+      .field-grid { grid-template-columns: 1fr; }
+      .field-grid-2 { grid-template-columns: 1fr; }
+      .header-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .brand-logo { width: 32px; height: 32px; font-size: 16px; }
+      h1 { font-size: 16px; }
+      h1 span { font-size: 11px; }
     }
   </style>
 </head>
 <body class="employee-mode">
-  <!-- Notificação OLED estilo iPhone -->
   <div class="oled-overlay" id="oledOverlay"></div>
   <div class="oled-notification" id="oledNotification">
-    <div class="notif-icon">⚠️</div>
+    <div class="notif-icon" id="oledNotifIcon">✅</div>
     <div class="notif-content">
-      <div class="notif-title">CONTÉM TELA OLED</div>
+      <div class="notif-title" id="oledNotifTitle">TELA OLED</div>
       <div class="notif-subtitle" id="oledNotifModel"></div>
     </div>
     <button class="notif-close" id="oledNotifClose">✕</button>
@@ -805,7 +791,7 @@
             </div>
             <div>
               <label for="modelInput">Modelo do Celular</label>
-              <input id="modelInput" type="search" placeholder="Ex: moto g24, A15, iPhone 13...">
+              <input id="modelInput" type="search" placeholder="Ex: moto g24, A15...">
             </div>
             <button id="autoSearchBtn" style="align-self:end;">🔍 Buscar</button>
           </div>
@@ -818,24 +804,25 @@
               </select>
             </div>
           </div>
-          <div class="search-status" id="searchStatus">💡 Digite o modelo do celular e clique em Buscar</div>
+          <div class="search-status info" id="searchStatus">💡 Digite o modelo e clique em Buscar</div>
         </div>
 
         <div style="display:none;">
           <textarea id="supplierText" spellcheck="false"></textarea>
         </div>
 
-        <div class="panel">
+        <div class="panel" id="filtersPanel">
           <div class="panel-header">
             <div class="panel-icon">🎯</div>
             <h2>Filtros</h2>
+            <span id="filtersStatus" style="font-size:10px;color:var(--muted);margin-left:auto;"></span>
           </div>
-          <div class="field-grid">
+          <div class="field-grid" id="filtersGrid">
             <div>
               <label for="termFilter">Modelo / Palavra</label>
-              <input id="termFilter" type="search" placeholder="Ex: G24, A14, iPhone...">
+              <input id="termFilter" type="search" placeholder="Ex: G24, A14...">
             </div>
-            <div>
+            <div class="filter-group" id="qualityFilterGroup">
               <label for="qualityFilter">Qualidade</label>
               <select id="qualityFilter">
                 <option value="">Todas</option>
@@ -847,7 +834,7 @@
                 <option value="Outras">Outras</option>
               </select>
             </div>
-            <div>
+            <div class="filter-group" id="aroFilterGroup">
               <label for="aroFilter">Aro</label>
               <select id="aroFilter">
                 <option value="Com aro">Com aro</option>
@@ -873,7 +860,6 @@
             <span class="count-badge empty" id="resultLabel">Nenhum item</span>
           </div>
           <div class="parts-list" id="partsList">
-            <!-- Mensagem de boas-vindas inicial -->
             <div class="welcome-message">
               <div class="icon">🔍</div>
               <h3>Nenhuma pesquisa realizada</h3>
@@ -924,7 +910,8 @@
       filtered: [],
       selectedKey: '',
       prazo: '2 a 4 horas',
-      searchedModel: ''
+      searchedModel: '',
+      filtersEnabled: true
     };
 
     const $ = s => document.querySelector(s);
@@ -1040,12 +1027,7 @@
         const rate = cardRates[installments] || 0;
         const totalWithRate = cashPrice * (1 + rate / 100);
         const each = roundUpToTen(totalWithRate / installments);
-        return {
-          installments,
-          rate,
-          total: each * installments,
-          each
-        };
+        return { installments, rate, total: each * installments, each };
       });
     }
 
@@ -1098,15 +1080,52 @@
       return Array.from(unique.values()).sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
     }
 
+    function updateFiltersState() {
+      const type = $('#partType').value;
+      const isFrontal = type === 'frontal';
+      state.filtersEnabled = isFrontal;
+
+      const qualityGroup = $('#qualityFilterGroup');
+      const aroGroup = $('#aroFilterGroup');
+      const filtersStatus = $('#filtersStatus');
+
+      if (isFrontal) {
+        qualityGroup.style.opacity = '1';
+        qualityGroup.style.pointerEvents = 'auto';
+        aroGroup.style.opacity = '1';
+        aroGroup.style.pointerEvents = 'auto';
+        filtersStatus.textContent = '';
+        // Resetar filtros para padrão
+        if ($('#qualityFilter').value === '' && $('#aroFilter').value === 'Com aro') {
+          // Já está no padrão
+        }
+      } else {
+        qualityGroup.style.opacity = '0.5';
+        qualityGroup.style.pointerEvents = 'none';
+        aroGroup.style.opacity = '0.5';
+        aroGroup.style.pointerEvents = 'none';
+        filtersStatus.textContent = '(filtros apenas para frontal)';
+        // Resetar filtros
+        $('#qualityFilter').value = '';
+        $('#aroFilter').value = '';
+      }
+    }
+
     function applyFilters() {
       const term = normalize($('#termFilter').value);
-      const quality = $('#qualityFilter').value;
-      const aro = $('#aroFilter').value;
+      const type = $('#partType').value;
+      const isFrontal = type === 'frontal';
+      
+      const quality = isFrontal ? $('#qualityFilter').value : '';
+      const aro = isFrontal ? $('#aroFilter').value : '';
+      
       state.filtered = state.parts.filter(p => {
-        return (!term || normalize(`${p.name} ${p.id}`).includes(term))
-          && (!quality || p.quality === quality)
-          && (!aro || p.aro === aro);
+        const termOk = !term || normalize(`${p.name} ${p.id}`).includes(term);
+        const qualityOk = !quality || p.quality === quality;
+        const aroOk = !aro || p.aro === aro;
+        return termOk && qualityOk && aroOk;
       });
+      
       if (!state.filtered.some(p => p.key === state.selectedKey)) {
         state.selectedKey = state.filtered[0]?.key || '';
       }
@@ -1130,7 +1149,6 @@
         $('#resultLabel').className = 'count-badge empty';
       }
       
-      // Verificar se há OLED nos resultados e mostrar notificação
       checkAndShowOledAlert();
     }
 
@@ -1141,17 +1159,31 @@
     }
 
     function checkAndShowOledAlert() {
+      const type = $('#partType').value;
+      // Só mostrar alerta OLED para frontal
+      if (type !== 'frontal') {
+        dismissOledNotification();
+        return;
+      }
+
       const oledItems = state.filtered.filter(p => p.oled);
+      const nonOledItems = state.filtered.filter(p => !p.oled);
+      const modelName = state.searchedModel || 'Modelo não especificado';
+
       if (oledItems.length > 0) {
-        const modelName = state.searchedModel || 'Modelo não especificado';
-        showOledNotification(modelName, oledItems.length);
+        showOledNotification(modelName, oledItems.length, true);
+      } else if (nonOledItems.length > 0 && state.filtered.length > 0) {
+        showOledNotification(modelName, nonOledItems.length, false);
+      } else if (state.filtered.length === 0) {
+        dismissOledNotification();
       }
     }
 
     function renderParts() {
       const list = $('#partsList');
+      const type = $('#partType').value;
+      const isFrontal = type === 'frontal';
       
-      // Se não tem nenhuma peça carregada e não tem pesquisa
       if (state.parts.length === 0 && !state.searchedModel) {
         list.innerHTML = `
           <div class="welcome-message">
@@ -1162,13 +1194,11 @@
         return;
       }
       
-      // Se tem pesquisa mas nenhum resultado
       if (!state.filtered.length) {
         list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Nenhuma peça encontrada.<br>Ajuste os filtros ou busque novamente.</p></div>';
         return;
       }
       
-      const type = $('#partType').value;
       const hasRule = ['frontal', 'carga', 'bateria'].includes(type);
       list.innerHTML = state.filtered.map(p => {
         const sale = hasRule ? getSalePrice(p.cost) : null;
@@ -1176,9 +1206,19 @@
         if (hasRule) {
           priceHtml = sale
             ? `<span class="sale-price">${formatBRL(sale)}</span>`
-            : '<span style="color:#dc2626;font-size:12px;font-weight:700;">Consultar</span>';
+            : '<span style="color:#dc2626;font-size:11px;font-weight:700;">Consultar</span>';
         }
-        const oledTag = p.oled ? '<span class="tag oled">⚠️ OLED</span>' : '';
+        
+        // Tag OLED/NÃO OLED apenas para frontal
+        let oledTag = '';
+        if (isFrontal) {
+          if (p.oled) {
+            oledTag = '<span class="tag oled-yes">✅ OLED</span>';
+          } else {
+            oledTag = '<span class="tag oled-no">⚠️ NÃO OLED</span>';
+          }
+        }
+        
         return `
           <div class="part-card ${p.key === state.selectedKey ? 'selected' : ''}" data-key="${p.key}">
             <div>
@@ -1227,7 +1267,7 @@
           <div class="info-row"><span class="label">Qualidade</span><span class="value">${escapeHtml(part.quality)}</span></div>
           <div class="info-row"><span class="label">Aro</span><span class="value">${escapeHtml(part.aro)}</span></div>
           <div class="divider"></div>
-          <p style="color:var(--muted);font-size:13px;">Regra de venda será configurada.</p>`;
+          <p style="color:var(--muted);font-size:12px;">Regra de venda será configurada.</p>`;
         return;
       }
       if (!sale) {
@@ -1236,7 +1276,7 @@
           <div class="info-row"><span class="label">Qualidade</span><span class="value">${escapeHtml(part.quality)}</span></div>
           <div class="info-row"><span class="label">Aro</span><span class="value">${escapeHtml(part.aro)}</span></div>
           <div class="divider"></div>
-          <div style="color:#dc2626;font-weight:700;font-size:13px;">${escapeHtml(getAdminMessage())}</div>`;
+          <div style="color:#dc2626;font-weight:700;font-size:12px;">${escapeHtml(getAdminMessage())}</div>`;
         return;
       }
 
@@ -1264,16 +1304,16 @@
         </div>
         <div class="price-card">
           <div class="label-sm">📅 Parcelado (com juros da máquina)</div>
-          <div style="font-size:20px;font-weight:800;color:var(--text);margin-top:4px;">${parceladoVezes}x de ${formatBRL(parceladoEach)}</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Total parcelado: ${formatBRL(parceladoTotal)}</div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);margin-top:4px;">${parceladoVezes}x de ${formatBRL(parceladoEach)}</div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">Total parcelado: ${formatBRL(parceladoTotal)}</div>
         </div>
         <div class="divider"></div>
         <div class="prazo-label">⏱️ Prazo de Entrega</div>
         <div class="prazo-selector" id="prazoSelector">
           ${prazoButtons}
         </div>
-        <div id="prazoCustom" style="margin-top:8px;" hidden>
-          <input id="prazoCustomInput" type="text" placeholder="Digite o prazo...">
+        <div id="prazoCustom" style="margin-top:6px;" hidden>
+          <input id="prazoCustomInput" type="text" placeholder="Digite o prazo..." style="font-size:12px;min-height:34px;">
         </div>
         <button id="copyQuoteBtn" class="accent" style="width:100%;margin-top:8px;">📋 Copiar Orçamento WhatsApp</button>
         <div class="copy-msg" id="copyMsg"></div>`;
@@ -1303,16 +1343,31 @@
 
     let oledNotificationTimeout = null;
 
-    function showOledNotification(modelName, count) {
+    function showOledNotification(modelName, count, hasOled) {
       const notification = $('#oledNotification');
       const overlay = $('#oledOverlay');
       const modelEl = $('#oledNotifModel');
+      const icon = $('#oledNotifIcon');
+      const title = $('#oledNotifTitle');
 
       if (oledNotificationTimeout) {
         clearTimeout(oledNotificationTimeout);
       }
 
-      modelEl.innerHTML = `<strong>Aparelho:</strong> ${escapeHtml(modelName)}<br><strong>${count} peça(s)</strong> com tela OLED encontrada(s)`;
+      if (hasOled) {
+        icon.className = 'notif-icon';
+        icon.textContent = '✅';
+        title.textContent = 'TELA OLED ENCONTRADA';
+        title.style.color = '#4ade80';
+        modelEl.innerHTML = `<strong>Aparelho:</strong> ${escapeHtml(modelName)}<br><strong>${count} peça(s)</strong> com tela OLED`;
+      } else {
+        icon.className = 'notif-icon warning';
+        icon.textContent = '⚠️';
+        title.textContent = 'ATENÇÃO - NÃO OLED';
+        title.style.color = '#f87171';
+        modelEl.innerHTML = `<strong>Aparelho:</strong> ${escapeHtml(modelName)}<br><strong>${count} peça(s)</strong> NÃO possuem tela OLED`;
+      }
+
       overlay.classList.add('active');
       notification.classList.add('show');
       notification.classList.remove('dismissed');
@@ -1369,7 +1424,7 @@ _Agradecemos a preferência!_ 🙏`;
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(msg).then(() => {
           const msgEl = $('#copyMsg');
-          msgEl.textContent = '✅ Orçamento copiado para WhatsApp!';
+          msgEl.textContent = '✅ Orçamento copiado!';
           setTimeout(() => { msgEl.textContent = ''; }, 3000);
         }).catch(() => fallbackCopy(msg));
       } else {
@@ -1405,14 +1460,8 @@ _Agradecemos a preferência!_ 🙏`;
       });
       const text = await response.text();
       let data = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch (error) {
-        data = { raw: text };
-      }
-      if (!response.ok) {
-        throw new Error(data.message || data.error || 'Fornecedor recusou a busca.');
-      }
+      try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { raw: text }; }
+      if (!response.ok) throw new Error(data.message || data.error || 'Fornecedor recusou a busca.');
       return data;
     }
 
@@ -1439,35 +1488,22 @@ _Agradecemos a preferência!_ 🙏`;
       if (typeof content.text === 'string') return content.text;
       if (typeof content.plainText === 'string') return content.plainText;
       if (content.richText) return richTextToText(content.richText);
-      if (content.html) {
-        const div = document.createElement('div');
-        div.innerHTML = content.html;
-        return div.textContent || '';
-      }
+      if (content.html) { const d = document.createElement('div'); d.innerHTML = content.html; return d.textContent || ''; }
       return richTextToText(content);
     }
 
     async function continueTypebot(sessionId, message) {
       try {
-        return await postTypebot(`/sessions/${encodeURIComponent(sessionId)}/continueChat`, {
-          message,
-          textBubbleContentFormat: 'markdown'
-        });
-      } catch (error) {
-        return postTypebot(`/sessions/${encodeURIComponent(sessionId)}/continueChat`, {
-          message: { type: 'text', text: message },
-          textBubbleContentFormat: 'markdown'
-        });
+        return await postTypebot(`/sessions/${encodeURIComponent(sessionId)}/continueChat`, { message, textBubbleContentFormat: 'markdown' });
+      } catch (e) {
+        return postTypebot(`/sessions/${encodeURIComponent(sessionId)}/continueChat`, { message: { type: 'text', text: message }, textBubbleContentFormat: 'markdown' });
       }
     }
 
     async function searchSupplierViaTypebot(query) {
-      const started = await postTypebot('/typebots/iplay-frg-web/startChat', {
-        textBubbleContentFormat: 'markdown'
-      });
+      const started = await postTypebot('/typebots/iplay-frg-web/startChat', { textBubbleContentFormat: 'markdown' });
       const sessionId = started.sessionId;
       if (!sessionId) throw new Error('Fornecedor não iniciou a conversa.');
-
       await continueTypebot(sessionId, 'iplay');
       const result = await continueTypebot(sessionId, query);
       const rawText = (result.messages || []).map(messageToText).filter(Boolean).join('\n');
@@ -1485,7 +1521,6 @@ _Agradecemos a preferência!_ 🙏`;
       }
 
       state.searchedModel = model;
-
       const btn = $('#autoSearchBtn');
       const st = $('#searchStatus');
       btn.disabled = true;
@@ -1501,8 +1536,8 @@ _Agradecemos a preferência!_ 🙏`;
         state.selectedKey = '';
         parseAndRender();
         st.textContent = state.parts.length
-          ? `✅ ${state.parts.length} item(ns) encontrados com sucesso!`
-          : '⚠️ Busca concluída mas nenhum item encontrado.';
+          ? `✅ ${state.parts.length} item(ns) encontrados!`
+          : '⚠️ Nenhum item encontrado.';
         st.className = state.parts.length ? 'search-status success' : 'search-status';
       } catch (error) {
         st.textContent = '❌ ' + error.message;
@@ -1514,52 +1549,31 @@ _Agradecemos a preferência!_ 🙏`;
     }
 
     function setToday() {
-      const t = new Date().toLocaleDateString('pt-BR', {
-        weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
-      });
+      const t = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
       $('#today').textContent = '📅 ' + t.charAt(0).toUpperCase() + t.slice(1);
     }
 
     function updateTypeControls() {
-      $('#chargeOptions').hidden = $('#partType').value !== 'carga';
+      const isCarga = $('#partType').value === 'carga';
+      $('#chargeOptions').hidden = !isCarga;
+      updateFiltersState();
       renderParts();
       renderQuote();
-    }
-
-    function clearLoadedParts(message) {
-      $('#supplierText').value = '';
-      state.parts = [];
-      state.filtered = [];
-      state.selectedKey = '';
-      state.searchedModel = '';
-      if (message) {
-        const st = $('#searchStatus');
-        st.textContent = message;
-        st.className = 'search-status info';
-      }
-      applyFilters();
     }
 
     // Event Listeners
     $('#autoSearchBtn').addEventListener('click', autoSearchSupplier);
     $('#modelInput').addEventListener('keydown', e => { if (e.key === 'Enter') autoSearchSupplier(); });
-    $('#partType').addEventListener('change', () => {
-      updateTypeControls();
-      clearLoadedParts('💡 Digite o modelo e clique em Buscar.');
-    });
+    $('#partType').addEventListener('change', updateTypeControls);
     $('#chargeKind').addEventListener('change', () => { renderParts(); renderQuote(); });
     $('#termFilter').addEventListener('input', applyFilters);
     $('#qualityFilter').addEventListener('change', applyFilters);
     $('#aroFilter').addEventListener('change', applyFilters);
 
-    // Init - Sistema limpo, sem dados carregados
+    // Init
     setToday();
     updateTypeControls();
     applyFilters();
-    
-    // Status inicial
-    $('#searchStatus').textContent = '💡 Digite o modelo do celular e clique em Buscar';
-    $('#searchStatus').className = 'search-status info';
   </script>
 </body>
 </html>
