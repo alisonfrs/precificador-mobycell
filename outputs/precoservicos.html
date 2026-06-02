@@ -1,0 +1,1565 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Precificador de Peças - Moby Cell</title>
+  <style>
+    :root {
+      --bg: #f8f9fb;
+      --surface: #ffffff;
+      --surface-2: #f4f5f7;
+      --surface-3: #eef0f4;
+      --text: #1a1d23;
+      --text-secondary: #5f6368;
+      --muted: #8a8f98;
+      --line: #e2e5ea;
+      --line-light: #eef0f4;
+      --red: #dc2626;
+      --red-dark: #b91c1c;
+      --red-light: #fef2f2;
+      --red-glow: rgba(220, 38, 38, 0.12);
+      --red-gradient: linear-gradient(135deg, #dc2626, #b91c1c);
+      --amber: #f59e0b;
+      --blue: #2563eb;
+      --purple: #7c3aed;
+      --green: #059669;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+      --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+      --radius-xs: 6px;
+      --radius-sm: 10px;
+      --radius: 14px;
+      --radius-lg: 18px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+    }
+
+    .employee-mode .sensitive { display: none !important; }
+
+    button, input, select, textarea { font: inherit; letter-spacing: inherit; }
+
+    button {
+      min-height: 44px;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      color: #ffffff;
+      background: var(--red-gradient);
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    button:hover { transform: translateY(-2px); box-shadow: var(--shadow-md), 0 0 0 4px var(--red-glow); }
+    button:hover::before { opacity: 1; }
+    button:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+
+    button.secondary {
+      color: var(--red);
+      background: var(--red-light);
+      border: 1.5px solid rgba(220, 38, 38, 0.2);
+      box-shadow: none;
+    }
+
+    button.accent { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    button.accent:hover { box-shadow: var(--shadow-md), 0 0 0 4px rgba(37, 99, 235, 0.15); }
+
+    /* ============ NOTIFICAÇÃO OLED ESTILO IPHONE ============ */
+    .oled-notification {
+      position: fixed;
+      top: -160px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      background: rgba(20, 20, 25, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 22px;
+      padding: 16px 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 340px;
+      max-width: 440px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.12);
+      transition: top 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+      pointer-events: auto;
+    }
+
+    .oled-notification.show {
+      top: 16px;
+    }
+
+    .oled-notification.dismissed {
+      top: -160px;
+    }
+
+    .oled-notification .notif-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(225, 29, 72, 0.5);
+      animation: notif-icon-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes notif-icon-pulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(225, 29, 72, 0.5); }
+      50% { box-shadow: 0 4px 30px rgba(225, 29, 72, 0.9); }
+    }
+
+    .oled-notification .notif-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .oled-notification .notif-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .oled-notification .notif-subtitle {
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+      line-height: 1.3;
+    }
+
+    .oled-notification .notif-close {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 50%;
+      color: rgba(255,255,255,0.6);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      transition: all var(--transition);
+      flex-shrink: 0;
+      font-weight: 700;
+    }
+
+    .oled-notification .notif-close:hover {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    .oled-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 9998;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+
+    .oled-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Header */
+    .app-header {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 50%, #7f1d1d 100%);
+      padding: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(220, 38, 38, 0.25);
+    }
+
+    .header-top {
+      background: rgba(0,0,0,0.1);
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .header-top .dot {
+      width: 6px;
+      height: 6px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+    }
+
+    .header-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand { display: flex; align-items: center; gap: 14px; }
+
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      background: #ffffff;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    h1 span {
+      font-weight: 400;
+      opacity: 0.8;
+      font-size: 16px;
+      display: block;
+    }
+
+    .today {
+      padding: 10px 18px;
+      border-radius: 50px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .main-layout {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 400px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--red-gradient);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .panel:hover { box-shadow: var(--shadow-md); border-color: #d0d5dc; }
+    .panel:hover::before { opacity: 1; }
+    .panel + .panel { margin-top: 16px; }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .panel-icon {
+      width: 38px;
+      height: 38px;
+      background: var(--red-light);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .summary-panel {
+      position: sticky;
+      top: 100px;
+      background: var(--surface);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      transition: all var(--transition);
+    }
+
+    .summary-panel:hover { box-shadow: var(--shadow-xl); }
+
+    .summary-head {
+      padding: 18px 22px;
+      background: var(--red-gradient);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #ffffff;
+    }
+
+    .summary-head .icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .summary-head h2 { color: #ffffff; font-size: 18px; font-weight: 700; }
+    .summary-body { padding: 22px; }
+
+    h2 { font-size: 17px; font-weight: 700; color: var(--text); margin: 0; }
+
+    .search-grid {
+      display: grid;
+      grid-template-columns: 200px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+    .field-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: all var(--transition);
+      font-size: 14px;
+    }
+
+    input, select { min-height: 44px; padding: 10px 14px; }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235f6368' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+      padding: 14px;
+      line-height: 1.6;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      background: var(--surface-2);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 4px var(--red-glow);
+      background: #fff;
+    }
+
+    .search-status {
+      min-height: 22px;
+      margin-top: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .search-status.success { color: #059669; }
+    .search-status.info { color: var(--text-secondary); }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+
+    .metric {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      text-align: center;
+      transition: all var(--transition);
+    }
+
+    .metric span {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      display: block;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .count-badge {
+      padding: 4px 12px;
+      background: var(--red-light);
+      color: var(--red);
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(220, 38, 38, 0.2);
+    }
+
+    .count-badge.empty {
+      background: var(--surface-2);
+      color: var(--muted);
+      border-color: var(--line);
+    }
+
+    .parts-list {
+      display: grid;
+      gap: 10px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .parts-list::-webkit-scrollbar { width: 5px; }
+    .parts-list::-webkit-scrollbar-track { background: var(--surface-2); border-radius: 3px; margin: 4px 0; }
+    .parts-list::-webkit-scrollbar-thumb { background: #c8cdd5; border-radius: 3px; }
+
+    .part-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 16px;
+      align-items: center;
+      background: var(--surface);
+      border: 1.5px solid var(--line-light);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+    }
+
+    .part-card:hover {
+      border-color: var(--red);
+      transform: translateX(3px);
+      box-shadow: var(--shadow-md);
+      background: #fff;
+    }
+
+    .part-card.selected {
+      border-color: var(--red);
+      background: #fff;
+      box-shadow: var(--shadow-md), 0 0 0 4px var(--red-glow);
+    }
+
+    .part-card.selected::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      background: var(--red-gradient);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .part-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.35;
+    }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--surface-2);
+      color: var(--text-secondary);
+      border: 1px solid var(--line);
+    }
+
+    .tag.quality-vivid { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
+    .tag.quality-nn { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .tag.quality-wk { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+    .tag.quality-wefix { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+    .tag.quality-cn { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+
+    .tag.oled {
+      background: #fff1f2;
+      color: #e11d48;
+      border-color: #fecdd3;
+      font-weight: 800;
+      animation: pulse-oled-tag 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-oled-tag {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.3); }
+      50% { box-shadow: 0 0 0 5px rgba(225, 29, 72, 0); }
+    }
+
+    .price-box { text-align: right; min-width: 90px; }
+
+    .price-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 3px;
+    }
+
+    .sale-price { font-size: 19px; font-weight: 800; color: var(--red); letter-spacing: -0.02em; }
+    .cost-price { font-size: 15px; font-weight: 700; color: var(--text-secondary); }
+
+    .selected-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+      line-height: 1.4;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--line-light);
+    }
+
+    .divider { height: 1px; background: var(--line-light); margin: 14px 0; }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      font-size: 13px;
+    }
+
+    .info-row .label { color: var(--text-secondary); font-weight: 500; }
+    .info-row .value { font-weight: 700; color: var(--text); }
+
+    .price-card {
+      background: var(--surface-2);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      transition: all var(--transition);
+    }
+
+    .price-card + .price-card { margin-top: 10px; }
+
+    .price-card.highlight {
+      border-color: var(--red);
+      background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+      box-shadow: var(--shadow-md);
+    }
+
+    .price-card .big-price {
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--red);
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .price-card .label-sm {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+
+    .price-card .discount-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      background: #dcfce7;
+      color: #16a34a;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .prazo-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .prazo-selector { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0 14px; }
+
+    .prazo-btn {
+      padding: 8px 14px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--surface-2);
+      border: 1.5px solid var(--line);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .prazo-btn:hover { border-color: var(--red); color: var(--red); background: #fff; }
+
+    .prazo-btn.active {
+      background: var(--red-light);
+      border-color: var(--red);
+      color: var(--red);
+      font-weight: 700;
+      box-shadow: 0 0 0 3px var(--red-glow);
+    }
+
+    .copy-msg { min-height: 20px; margin-top: 10px; font-size: 12px; font-weight: 700; color: #059669; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .empty-state .icon { font-size: 44px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { font-size: 13px; font-weight: 500; }
+
+    .welcome-message {
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    .welcome-message .icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
+
+    .welcome-message h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .welcome-message p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 1100px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .summary-panel { position: static; }
+    }
+
+    @media (max-width: 768px) {
+      .search-grid { grid-template-columns: 1fr 1fr; }
+      .field-grid { grid-template-columns: repeat(2, 1fr); }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .part-card { grid-template-columns: 1fr; gap: 10px; }
+      .price-box { text-align: left; }
+      h1 { font-size: 20px; }
+    }
+
+    @media (max-width: 480px) {
+      .search-grid, .field-grid, .field-grid-2 { grid-template-columns: 1fr; }
+      .header-inner { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body class="employee-mode">
+  <!-- Notificação OLED estilo iPhone -->
+  <div class="oled-overlay" id="oledOverlay"></div>
+  <div class="oled-notification" id="oledNotification">
+    <div class="notif-icon">⚠️</div>
+    <div class="notif-content">
+      <div class="notif-title">CONTÉM TELA OLED</div>
+      <div class="notif-subtitle" id="oledNotifModel"></div>
+    </div>
+    <button class="notif-close" id="oledNotifClose">✕</button>
+  </div>
+
+  <div class="app-shell" id="appShell">
+    <header class="app-header">
+      <div class="header-top">
+        <div class="dot"></div>
+        SISTEMA DE PRECIFICAÇÃO MOBY CELL
+        <div class="dot"></div>
+      </div>
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-logo">📱</div>
+          <h1>Moby Cell<span>Precificador de Serviços</span></h1>
+        </div>
+        <div class="today" id="today"></div>
+      </div>
+    </header>
+
+    <div class="main-layout">
+      <section>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon">🔍</div>
+            <h2>Buscar no Fornecedor</h2>
+          </div>
+          <div class="search-grid">
+            <div>
+              <label for="partType">Tipo da Peça</label>
+              <select id="partType">
+                <option value="frontal">Frontal / Tela</option>
+                <option value="carga">Carga</option>
+                <option value="bateria">Bateria</option>
+              </select>
+            </div>
+            <div>
+              <label for="modelInput">Modelo do Celular</label>
+              <input id="modelInput" type="search" placeholder="Ex: moto g24, A15, iPhone 13...">
+            </div>
+            <button id="autoSearchBtn" style="align-self:end;">🔍 Buscar</button>
+          </div>
+          <div class="field-grid-2" id="chargeOptions" hidden>
+            <div>
+              <label for="chargeKind">Tipo do Conector</label>
+              <select id="chargeKind">
+                <option value="v8">V8 — Cliente R$ 120,00</option>
+                <option value="tipo-c">Tipo C — Cliente R$ 180,00</option>
+              </select>
+            </div>
+          </div>
+          <div class="search-status" id="searchStatus">💡 Digite o modelo do celular e clique em Buscar</div>
+        </div>
+
+        <div style="display:none;">
+          <textarea id="supplierText" spellcheck="false"></textarea>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon">🎯</div>
+            <h2>Filtros</h2>
+          </div>
+          <div class="field-grid">
+            <div>
+              <label for="termFilter">Modelo / Palavra</label>
+              <input id="termFilter" type="search" placeholder="Ex: G24, A14, iPhone...">
+            </div>
+            <div>
+              <label for="qualityFilter">Qualidade</label>
+              <select id="qualityFilter">
+                <option value="">Todas</option>
+                <option value="1a Linha VIVID">1a Linha VIVID</option>
+                <option value="1a Linha NN">1a Linha NN</option>
+                <option value="Original CN">Original CN</option>
+                <option value="PREMIUM WK">PREMIUM WK</option>
+                <option value="PREMIUM NACIONAL WEFIX">PREMIUM NACIONAL WEFIX</option>
+                <option value="Outras">Outras</option>
+              </select>
+            </div>
+            <div>
+              <label for="aroFilter">Aro</label>
+              <select id="aroFilter">
+                <option value="Com aro">Com aro</option>
+                <option value="Sem aro">Sem aro</option>
+                <option value="">Todos</option>
+              </select>
+            </div>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric"><span>Total</span><strong id="metricTotal">0</strong></div>
+            <div class="metric"><span>Filtrados</span><strong id="metricFiltered">0</strong></div>
+            <div class="metric sensitive"><span>Menor Custo</span><strong id="metricMin">R$ 0</strong></div>
+            <div class="metric sensitive"><span>Maior Custo</span><strong id="metricMax">R$ 0</strong></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="result-header">
+            <div class="panel-header" style="margin-bottom:0;">
+              <div class="panel-icon">📦</div>
+              <h2>Resultado</h2>
+            </div>
+            <span class="count-badge empty" id="resultLabel">Nenhum item</span>
+          </div>
+          <div class="parts-list" id="partsList">
+            <!-- Mensagem de boas-vindas inicial -->
+            <div class="welcome-message">
+              <div class="icon">🔍</div>
+              <h3>Nenhuma pesquisa realizada</h3>
+              <p>Digite o modelo do celular no campo de busca<br>e clique em <strong>Buscar</strong> para encontrar peças.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="summary-panel">
+        <div class="summary-head">
+          <div class="icon">💰</div>
+          <h2>Orçamento</h2>
+        </div>
+        <div class="summary-body" id="quoteBox">
+          <div class="empty-state">
+            <div class="icon">📋</div>
+            <p>Selecione uma peça para<br>montar o orçamento</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const pricingRules = [
+      { test: c => c < 100, sale: 250 },
+      { test: c => c <= 120, sale: 270 },
+      { test: c => c <= 140, sale: 300 },
+      { test: c => c <= 150, sale: 350 },
+      { test: c => c <= 180, sale: 380 },
+      { test: c => c <= 200, sale: 450 },
+      { test: c => c <= 250, sale: 570 },
+      { test: c => c <= 300, sale: 650 }
+    ];
+
+    const batteryPricingRules = [
+      { test: c => c <= 50, sale: 170 },
+      { test: c => c <= 60, sale: 180 },
+      { test: c => c <= 70, sale: 190 },
+      { test: c => c <= 100, sale: 230 },
+      { test: c => c <= 120, sale: 250 },
+      { test: c => c <= 150, sale: 300 }
+    ];
+
+    const state = {
+      parts: [],
+      filtered: [],
+      selectedKey: '',
+      prazo: '2 a 4 horas',
+      searchedModel: ''
+    };
+
+    const $ = s => document.querySelector(s);
+
+    function formatBRL(v) {
+      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function parseMoney(v) {
+      if (typeof v === 'number') return v;
+      const n = Number(String(v).replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.'));
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function normalize(t) {
+      return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    }
+
+    function cleanProductName(t) {
+      return String(t || '')
+        .replace(/\[\s*R\$\s*[\d.,]+\s*\]/gi, '')
+        .replace(/-\s*R\$\s*[\d.,]+/gi, '')
+        .replace(/\s+-\s*$/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/\s+\*/g, ' *')
+        .replace(/\*\s+/g, '* ')
+        .trim();
+    }
+
+    function classifyQuality(name) {
+      const n = normalize(name);
+      if (n.includes('VIVID')) return '1a Linha VIVID';
+      if (n.includes('ORIGINAL NN') || n.includes('( M')) return '1a Linha NN';
+      if (n.includes('PREMIUM WK') || n.includes('( K')) return 'PREMIUM WK';
+      if (n.includes('WEFIX')) return 'PREMIUM NACIONAL WEFIX';
+      if (n.includes('ORIGINAL CN') || /\bCN\b/.test(n)) return 'Original CN';
+      return 'Outras';
+    }
+
+    function getQualityTagClass(q) {
+      if (q.includes('VIVID')) return 'quality-vivid';
+      if (q.includes('NN')) return 'quality-nn';
+      if (q.includes('WK')) return 'quality-wk';
+      if (q.includes('WEFIX')) return 'quality-wefix';
+      if (q.includes('CN')) return 'quality-cn';
+      return '';
+    }
+
+    function classifyAro(name) {
+      const n = normalize(name);
+      if (n.includes('SEM ARO')) return 'Sem aro';
+      if (n.includes('COM ARO')) return 'Com aro';
+      return 'Nao informado';
+    }
+
+    function hasOLED(name) {
+      return normalize(name).includes('OLED');
+    }
+
+    function shouldHidePart(name) {
+      const n = normalize(name);
+      return n.includes('FRONTAL VIDRO COM COLA OCA') || n.includes('VIDRO COM COLA OCA');
+    }
+
+    function getSalePrice(cost) {
+      const type = $('#partType').value;
+      if (type === 'frontal') {
+        const rule = pricingRules.find(r => r.test(cost));
+        return rule ? rule.sale : null;
+      }
+      if (type === 'carga') {
+        if ($('#chargeKind').value === 'v8') {
+          if (cost <= 40) return Math.max(120, cost + 100);
+          if (cost <= 80) return cost + 120;
+          return null;
+        }
+        return cost <= 50 ? 180 : null;
+      }
+      if (type === 'bateria') {
+        const rule = batteryPricingRules.find(r => r.test(cost));
+        return rule ? rule.sale : null;
+      }
+      return null;
+    }
+
+    function getAdminMessage() {
+      const type = $('#partType').value;
+      if (type === 'carga') {
+        return $('#chargeKind').value === 'v8'
+          ? 'Custo acima de R$ 80 para V8. Consultar administrador.'
+          : 'Custo acima de R$ 50 para Tipo C. Consultar administrador.';
+      }
+      if (type === 'bateria') return 'Custo acima de R$ 150. Consultar administrador.';
+      return 'Custo acima de R$ 300. Consultar administrador.';
+    }
+
+    function roundUpToTen(value) {
+      return Math.ceil(value / 10) * 10;
+    }
+
+    function calculateInstallments(cashPrice) {
+      if (!cashPrice) return [];
+      let max;
+      if (cashPrice <= 350) max = 3;
+      else if (cashPrice <= 450) max = 4;
+      else if (cashPrice <= 650) max = 5;
+      else return [];
+
+      const cardRates = { 1: 3.89, 2: 7.39, 3: 8.67, 4: 9.33, 5: 10.20 };
+
+      return Array.from({ length: max }, (_, i) => {
+        const installments = i + 1;
+        const rate = cardRates[installments] || 0;
+        const totalWithRate = cashPrice * (1 + rate / 100);
+        const each = roundUpToTen(totalWithRate / installments);
+        return {
+          installments,
+          rate,
+          total: each * installments,
+          each
+        };
+      });
+    }
+
+    function parseSupplierList(text) {
+      const lines = String(text || '').replace(/\r/g, '\n').split('\n').map(l => l.trim()).filter(Boolean);
+      const records = [];
+      let current = null;
+
+      function finishCurrent() {
+        if (!current) return;
+        const combined = current.parts.join(' ');
+        const priceMatch = combined.match(/R\$\s*([\d.]+,\d{2})/i);
+        if (!priceMatch) { current = null; return; }
+        const name = cleanProductName(combined);
+        const cost = parseMoney(priceMatch[1]);
+        if (!name || !cost || shouldHidePart(name)) { current = null; return; }
+        records.push({
+          number: current.number,
+          id: current.id,
+          name,
+          cost,
+          quality: classifyQuality(name),
+          aro: classifyAro(name),
+          oled: hasOLED(name)
+        });
+        current = null;
+      }
+
+      lines.forEach(line => {
+        if (/^(no|n[ºo]\s*\||id\s*\||[-]{3,}|deseja|buscar outro|fazer pedido|encerrar)/i.test(line)) return;
+        const start = line.match(/^(\d+)\s*-\s*(\d+)\s*-\s*(.+)$/);
+        if (start) {
+          finishCurrent();
+          current = { number: Number(start[1]), id: start[2], parts: [start[3]] };
+          if (/R\$\s*[\d.]+,\d{2}/i.test(start[3])) finishCurrent();
+          return;
+        }
+        if (current) {
+          current.parts.push(line);
+          if (/R\$\s*[\d.]+,\d{2}/i.test(line)) finishCurrent();
+        }
+      });
+      finishCurrent();
+
+      const unique = new Map();
+      records.forEach(p => {
+        const k = `${p.id}|${normalize(p.name)}|${p.cost.toFixed(2)}`;
+        if (!unique.has(k)) unique.set(k, { ...p, key: k });
+      });
+      return Array.from(unique.values()).sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name));
+    }
+
+    function applyFilters() {
+      const term = normalize($('#termFilter').value);
+      const quality = $('#qualityFilter').value;
+      const aro = $('#aroFilter').value;
+      state.filtered = state.parts.filter(p => {
+        return (!term || normalize(`${p.name} ${p.id}`).includes(term))
+          && (!quality || p.quality === quality)
+          && (!aro || p.aro === aro);
+      });
+      if (!state.filtered.some(p => p.key === state.selectedKey)) {
+        state.selectedKey = state.filtered[0]?.key || '';
+      }
+      renderParts();
+      updateMetrics();
+      renderQuote();
+    }
+
+    function updateMetrics() {
+      const costs = state.filtered.map(p => p.cost);
+      $('#metricTotal').textContent = state.parts.length;
+      $('#metricFiltered').textContent = state.filtered.length;
+      $('#metricMin').textContent = costs.length ? formatBRL(Math.min(...costs)) : 'R$ 0';
+      $('#metricMax').textContent = costs.length ? formatBRL(Math.max(...costs)) : 'R$ 0';
+      
+      if (state.parts.length > 0) {
+        $('#resultLabel').textContent = state.filtered.length ? `${state.filtered.length} item(ns)` : 'Nenhum item';
+        $('#resultLabel').className = state.filtered.length ? 'count-badge' : 'count-badge empty';
+      } else {
+        $('#resultLabel').textContent = 'Nenhum item';
+        $('#resultLabel').className = 'count-badge empty';
+      }
+      
+      // Verificar se há OLED nos resultados e mostrar notificação
+      checkAndShowOledAlert();
+    }
+
+    function parseAndRender() {
+      state.parts = parseSupplierList($('#supplierText').value);
+      state.selectedKey = '';
+      applyFilters();
+    }
+
+    function checkAndShowOledAlert() {
+      const oledItems = state.filtered.filter(p => p.oled);
+      if (oledItems.length > 0) {
+        const modelName = state.searchedModel || 'Modelo não especificado';
+        showOledNotification(modelName, oledItems.length);
+      }
+    }
+
+    function renderParts() {
+      const list = $('#partsList');
+      
+      // Se não tem nenhuma peça carregada e não tem pesquisa
+      if (state.parts.length === 0 && !state.searchedModel) {
+        list.innerHTML = `
+          <div class="welcome-message">
+            <div class="icon">🔍</div>
+            <h3>Nenhuma pesquisa realizada</h3>
+            <p>Digite o modelo do celular no campo de busca<br>e clique em <strong>Buscar</strong> para encontrar peças.</p>
+          </div>`;
+        return;
+      }
+      
+      // Se tem pesquisa mas nenhum resultado
+      if (!state.filtered.length) {
+        list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Nenhuma peça encontrada.<br>Ajuste os filtros ou busque novamente.</p></div>';
+        return;
+      }
+      
+      const type = $('#partType').value;
+      const hasRule = ['frontal', 'carga', 'bateria'].includes(type);
+      list.innerHTML = state.filtered.map(p => {
+        const sale = hasRule ? getSalePrice(p.cost) : null;
+        let priceHtml = '<span style="color:var(--muted);font-size:13px;">—</span>';
+        if (hasRule) {
+          priceHtml = sale
+            ? `<span class="sale-price">${formatBRL(sale)}</span>`
+            : '<span style="color:#dc2626;font-size:12px;font-weight:700;">Consultar</span>';
+        }
+        const oledTag = p.oled ? '<span class="tag oled">⚠️ OLED</span>' : '';
+        return `
+          <div class="part-card ${p.key === state.selectedKey ? 'selected' : ''}" data-key="${p.key}">
+            <div>
+              <div class="part-name">${escapeHtml(p.name)}</div>
+              <div class="tags">
+                <span class="tag">ID ${escapeHtml(p.id)}</span>
+                <span class="tag ${getQualityTagClass(p.quality)}">${escapeHtml(p.quality)}</span>
+                <span class="tag">${escapeHtml(p.aro)}</span>
+                ${oledTag}
+              </div>
+            </div>
+            <div class="price-box sensitive">
+              <div class="price-label">Custo</div>
+              <span class="cost-price">${formatBRL(p.cost)}</span>
+            </div>
+            <div class="price-box">
+              <div class="price-label">À Vista</div>
+              ${priceHtml}
+            </div>
+          </div>`;
+      }).join('');
+      list.querySelectorAll('.part-card').forEach(card => {
+        card.addEventListener('click', () => {
+          state.selectedKey = card.dataset.key;
+          renderParts();
+          renderQuote();
+        });
+      });
+    }
+
+    function renderQuote() {
+      const box = $('#quoteBox');
+      const part = state.parts.find(p => p.key === state.selectedKey);
+      if (!part) {
+        box.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>Selecione uma peça para<br>montar o orçamento</p></div>';
+        return;
+      }
+
+      const type = $('#partType').value;
+      const hasRule = ['frontal', 'carga', 'bateria'].includes(type);
+      const sale = hasRule ? getSalePrice(part.cost) : null;
+
+      if (!hasRule) {
+        box.innerHTML = `
+          <div class="selected-title">${escapeHtml(part.name)}</div>
+          <div class="info-row"><span class="label">Qualidade</span><span class="value">${escapeHtml(part.quality)}</span></div>
+          <div class="info-row"><span class="label">Aro</span><span class="value">${escapeHtml(part.aro)}</span></div>
+          <div class="divider"></div>
+          <p style="color:var(--muted);font-size:13px;">Regra de venda será configurada.</p>`;
+        return;
+      }
+      if (!sale) {
+        box.innerHTML = `
+          <div class="selected-title">${escapeHtml(part.name)}</div>
+          <div class="info-row"><span class="label">Qualidade</span><span class="value">${escapeHtml(part.quality)}</span></div>
+          <div class="info-row"><span class="label">Aro</span><span class="value">${escapeHtml(part.aro)}</span></div>
+          <div class="divider"></div>
+          <div style="color:#dc2626;font-weight:700;font-size:13px;">${escapeHtml(getAdminMessage())}</div>`;
+        return;
+      }
+
+      const installments = calculateInstallments(sale);
+      const maxInstallment = installments.length ? installments[installments.length - 1] : null;
+      const parceladoTotal = maxInstallment ? maxInstallment.total : sale;
+      const parceladoEach = maxInstallment ? maxInstallment.each : sale;
+      const parceladoVezes = maxInstallment ? maxInstallment.installments : 1;
+
+      const prazoOptions = ['2 a 4 horas', '4 a 8 horas', '24 horas', '2 dias', 'Personalizado'];
+      const prazoButtons = prazoOptions.map(p => {
+        const active = state.prazo === p ? ' active' : '';
+        return `<button class="prazo-btn${active}" data-prazo="${p}">${p}</button>`;
+      }).join('');
+
+      box.innerHTML = `
+        <div class="selected-title">${escapeHtml(part.name)}</div>
+        <div class="info-row"><span class="label">Qualidade</span><span class="value">${escapeHtml(part.quality)}</span></div>
+        <div class="info-row"><span class="label">Aro</span><span class="value">${escapeHtml(part.aro)}</span></div>
+        <div class="divider"></div>
+        <div class="price-card highlight">
+          <div class="label-sm">💵 À Vista (Dinheiro ou Pix)</div>
+          <div class="big-price">${formatBRL(sale)}</div>
+          <div class="discount-badge">🔥 Preço com desconto</div>
+        </div>
+        <div class="price-card">
+          <div class="label-sm">📅 Parcelado (com juros da máquina)</div>
+          <div style="font-size:20px;font-weight:800;color:var(--text);margin-top:4px;">${parceladoVezes}x de ${formatBRL(parceladoEach)}</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Total parcelado: ${formatBRL(parceladoTotal)}</div>
+        </div>
+        <div class="divider"></div>
+        <div class="prazo-label">⏱️ Prazo de Entrega</div>
+        <div class="prazo-selector" id="prazoSelector">
+          ${prazoButtons}
+        </div>
+        <div id="prazoCustom" style="margin-top:8px;" hidden>
+          <input id="prazoCustomInput" type="text" placeholder="Digite o prazo...">
+        </div>
+        <button id="copyQuoteBtn" class="accent" style="width:100%;margin-top:8px;">📋 Copiar Orçamento WhatsApp</button>
+        <div class="copy-msg" id="copyMsg"></div>`;
+
+      document.querySelectorAll('#prazoSelector .prazo-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.prazo = btn.dataset.prazo;
+          if (state.prazo === 'Personalizado') {
+            $('#prazoCustom').hidden = false;
+            $('#prazoCustomInput').focus();
+          } else {
+            $('#prazoCustom').hidden = true;
+          }
+          document.querySelectorAll('#prazoSelector .prazo-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+
+      $('#copyQuoteBtn').addEventListener('click', () => {
+        let prazoFinal = state.prazo;
+        if (state.prazo === 'Personalizado') {
+          prazoFinal = $('#prazoCustomInput').value.trim() || 'a combinar';
+        }
+        copyQuoteWhatsApp(part, sale, parceladoVezes, parceladoEach, parceladoTotal, prazoFinal);
+      });
+    }
+
+    let oledNotificationTimeout = null;
+
+    function showOledNotification(modelName, count) {
+      const notification = $('#oledNotification');
+      const overlay = $('#oledOverlay');
+      const modelEl = $('#oledNotifModel');
+
+      if (oledNotificationTimeout) {
+        clearTimeout(oledNotificationTimeout);
+      }
+
+      modelEl.innerHTML = `<strong>Aparelho:</strong> ${escapeHtml(modelName)}<br><strong>${count} peça(s)</strong> com tela OLED encontrada(s)`;
+      overlay.classList.add('active');
+      notification.classList.add('show');
+      notification.classList.remove('dismissed');
+
+      oledNotificationTimeout = setTimeout(() => {
+        dismissOledNotification();
+      }, 6000);
+    }
+
+    function dismissOledNotification() {
+      const notification = $('#oledNotification');
+      const overlay = $('#oledOverlay');
+      notification.classList.add('dismissed');
+      notification.classList.remove('show');
+      overlay.classList.remove('active');
+      if (oledNotificationTimeout) {
+        clearTimeout(oledNotificationTimeout);
+        oledNotificationTimeout = null;
+      }
+    }
+
+    $('#oledNotifClose').addEventListener('click', dismissOledNotification);
+    $('#oledOverlay').addEventListener('click', dismissOledNotification);
+
+    function copyQuoteWhatsApp(part, sale, vezes, each, total, prazo) {
+      const hoje = new Date().toLocaleDateString('pt-BR');
+      const aparelhoNome = state.searchedModel || part.name;
+      
+      const msg = `*Orçamento Moby Cell Campo de Santana*
+
+*Data:* 🗓️ ${hoje}
+
+*Aparelho:* 📱 ${aparelhoNome}
+
+*OPÇÃO 1️⃣*
+
+*Serviços/valores* 🪛
+Troca de tela ${part.quality}: ${formatBRL(sale)}
+
+*💰 Forma de pagamento:* 
+
+💵 *À vista: ${formatBRL(sale)} (DINHEIRO OU PIX)* 🔥
+
+Ou
+
+📅 Parcelado: ${vezes}x de ${formatBRL(each)} (sem juros)
+Total parcelado: ${formatBRL(total)}
+
+*Prazo:* ${prazo} ⏱️
+
+
+_Agradecemos a preferência!_ 🙏`;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(msg).then(() => {
+          const msgEl = $('#copyMsg');
+          msgEl.textContent = '✅ Orçamento copiado para WhatsApp!';
+          setTimeout(() => { msgEl.textContent = ''; }, 3000);
+        }).catch(() => fallbackCopy(msg));
+      } else {
+        fallbackCopy(msg);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      area.remove();
+      const msgEl = $('#copyMsg');
+      msgEl.textContent = '✅ Orçamento copiado!';
+      setTimeout(() => { msgEl.textContent = ''; }, 3000);
+    }
+
+    function escapeHtml(t) {
+      const d = document.createElement('div');
+      d.textContent = t;
+      return d.innerHTML;
+    }
+
+    async function postTypebot(path, body) {
+      const response = await fetch(`https://bot.gestorv3.com/api/v1${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body || {})
+      });
+      const text = await response.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (error) {
+        data = { raw: text };
+      }
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Fornecedor recusou a busca.');
+      }
+      return data;
+    }
+
+    function richTextToText(value) {
+      const lines = [];
+      function walk(node) {
+        if (node == null) return;
+        if (typeof node === 'string') { lines.push(node); return; }
+        if (Array.isArray(node)) { node.forEach(walk); return; }
+        if (typeof node !== 'object') return;
+        if (typeof node.text === 'string') lines.push(node.text);
+        if (Array.isArray(node.children)) { node.children.forEach(walk); lines.push('\n'); }
+        if (Array.isArray(node.content)) node.content.forEach(walk);
+        if (Array.isArray(node.richText)) node.richText.forEach(walk);
+      }
+      walk(value);
+      return lines.join('').replace(/\n{3,}/g, '\n\n').trim();
+    }
+
+    function messageToText(message) {
+      if (!message) return '';
+      const content = message.content || message;
+      if (typeof content === 'string') return content;
+      if (typeof content.text === 'string') return content.text;
+      if (typeof content.plainText === 'string') return content.plainText;
+      if (content.richText) return richTextToText(content.richText);
+      if (content.html) {
+        const div = document.createElement('div');
+        div.innerHTML = content.html;
+        return div.textContent || '';
+      }
+      return richTextToText(content);
+    }
+
+    async function continueTypebot(sessionId, message) {
+      try {
+        return await postTypebot(`/sessions/${encodeURIComponent(sessionId)}/continueChat`, {
+          message,
+          textBubbleContentFormat: 'markdown'
+        });
+      } catch (error) {
+        return postTypebot(`/sessions/${encodeURIComponent(sessionId)}/continueChat`, {
+          message: { type: 'text', text: message },
+          textBubbleContentFormat: 'markdown'
+        });
+      }
+    }
+
+    async function searchSupplierViaTypebot(query) {
+      const started = await postTypebot('/typebots/iplay-frg-web/startChat', {
+        textBubbleContentFormat: 'markdown'
+      });
+      const sessionId = started.sessionId;
+      if (!sessionId) throw new Error('Fornecedor não iniciou a conversa.');
+
+      await continueTypebot(sessionId, 'iplay');
+      const result = await continueTypebot(sessionId, query);
+      const rawText = (result.messages || []).map(messageToText).filter(Boolean).join('\n');
+      if (!rawText) throw new Error('Fornecedor respondeu sem lista.');
+      return rawText;
+    }
+
+    async function autoSearchSupplier() {
+      const model = $('#modelInput').value.trim();
+      if (!model) {
+        const st = $('#searchStatus');
+        st.textContent = '⚠️ Digite o modelo do celular.';
+        st.className = 'search-status';
+        return;
+      }
+
+      state.searchedModel = model;
+
+      const btn = $('#autoSearchBtn');
+      const st = $('#searchStatus');
+      btn.disabled = true;
+      btn.textContent = '⏳ Buscando...';
+      st.textContent = '🔍 Consultando fornecedor...';
+      st.className = 'search-status';
+
+      const type = $('#partType').value;
+      const query = `${type} ${model}`;
+
+      try {
+        $('#supplierText').value = await searchSupplierViaTypebot(query);
+        state.selectedKey = '';
+        parseAndRender();
+        st.textContent = state.parts.length
+          ? `✅ ${state.parts.length} item(ns) encontrados com sucesso!`
+          : '⚠️ Busca concluída mas nenhum item encontrado.';
+        st.className = state.parts.length ? 'search-status success' : 'search-status';
+      } catch (error) {
+        st.textContent = '❌ ' + error.message;
+        st.className = 'search-status';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔍 Buscar';
+      }
+    }
+
+    function setToday() {
+      const t = new Date().toLocaleDateString('pt-BR', {
+        weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+      $('#today').textContent = '📅 ' + t.charAt(0).toUpperCase() + t.slice(1);
+    }
+
+    function updateTypeControls() {
+      $('#chargeOptions').hidden = $('#partType').value !== 'carga';
+      renderParts();
+      renderQuote();
+    }
+
+    function clearLoadedParts(message) {
+      $('#supplierText').value = '';
+      state.parts = [];
+      state.filtered = [];
+      state.selectedKey = '';
+      state.searchedModel = '';
+      if (message) {
+        const st = $('#searchStatus');
+        st.textContent = message;
+        st.className = 'search-status info';
+      }
+      applyFilters();
+    }
+
+    // Event Listeners
+    $('#autoSearchBtn').addEventListener('click', autoSearchSupplier);
+    $('#modelInput').addEventListener('keydown', e => { if (e.key === 'Enter') autoSearchSupplier(); });
+    $('#partType').addEventListener('change', () => {
+      updateTypeControls();
+      clearLoadedParts('💡 Digite o modelo e clique em Buscar.');
+    });
+    $('#chargeKind').addEventListener('change', () => { renderParts(); renderQuote(); });
+    $('#termFilter').addEventListener('input', applyFilters);
+    $('#qualityFilter').addEventListener('change', applyFilters);
+    $('#aroFilter').addEventListener('change', applyFilters);
+
+    // Init - Sistema limpo, sem dados carregados
+    setToday();
+    updateTypeControls();
+    applyFilters();
+    
+    // Status inicial
+    $('#searchStatus').textContent = '💡 Digite o modelo do celular e clique em Buscar';
+    $('#searchStatus').className = 'search-status info';
+  </script>
+</body>
+</html>
