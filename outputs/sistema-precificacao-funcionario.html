@@ -73,7 +73,8 @@
       font-weight: 700;
     }
 
-    .employee-mode .manager-only {
+    .employee-mode .manager-only,
+    .employee-mode .sensitive {
       display: none !important;
     }
 
@@ -1001,7 +1002,7 @@ SEM ARO NACIONAL WEFIX
     }
 
     function canShowCost() {
-      return true;
+      return appMode === 'manager';
     }
 
     function costSummaryRow(part) {
