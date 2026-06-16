@@ -648,7 +648,7 @@
               <option value="bateria">Bateria</option>
             </select>
           </div>
-          <div>
+          <div id="modelInputWrap">
             <label for="modelInput">Modelo do celular</label>
             <input id="modelInput" type="search" placeholder="Ex: moto g24">
           </div>
@@ -658,8 +658,8 @@
           <div>
             <label for="chargeKind">Tipo do conector</label>
             <select id="chargeKind">
-              <option value="v8">V8 - cliente paga R$ 120,00</option>
-              <option value="tipo-c">Tipo C - cliente paga R$ 180,00</option>
+              <option value="v8">V8 / Micro USB — R$ 120,00</option>
+              <option value="tipo-c">Tipo C — R$ 180,00</option>
             </select>
           </div>
         </div>
@@ -847,6 +847,7 @@ SEM ARO NACIONAL WEFIX
       chargeKind: $('#chargeKind'),
       chargeOptions: $('#chargeOptions'),
       modelInput: $('#modelInput'),
+      modelInputWrap: $('#modelInputWrap'),
       autoSearchBtn: $('#autoSearchBtn'),
       searchStatus: $('#searchStatus'),
       termFilter: $('#termFilter'),
@@ -1472,10 +1473,68 @@ SEM ARO NACIONAL WEFIX
       els.today.textContent = text.charAt(0).toUpperCase() + text.slice(1);
     }
 
+    function renderChargeQuote() {
+      const isV8 = els.chargeKind.value === 'v8';
+      const sale = isV8 ? 120 : 180;
+      const label = isV8 ? 'V8 / Micro USB' : 'Tipo C';
+      const installments = calculateInstallments(sale);
+      const max = installments.length ? installments[installments.length - 1] : null;
+      const parcelText = max
+        ? `Cartao sem juros: ate ${max.installments}x de ${formatBRL(max.each)}.`
+        : 'Cartao: consultar condicao.';
+
+      els.quoteBox.innerHTML = `
+        <div class="cash-total">
+          <span>Carga ${label} — Pix ou dinheiro</span>
+          <strong>${formatBRL(sale)}</strong>
+        </div>
+        <h3>Cartao sem juros</h3>
+        <div class="installments">
+          ${installments.map(row => `
+            <div class="installment">
+              <b>${row.installments}x</b>
+              <span>${formatBRL(row.each)}</span>
+              <small>Total ${formatBRL(row.total)}</small>
+            </div>
+          `).join('')}
+        </div>
+        <button id="copyQuoteBtn">Copiar orcamento</button>
+        <div class="copy-msg" id="copyMsg"></div>
+      `;
+
+      $('#copyQuoteBtn').addEventListener('click', () => {
+        const text = [
+          `Tipo: Carga ${label}`,
+          `Valor a vista no Pix ou dinheiro: ${formatBRL(sale)}.`,
+          parcelText
+        ].join('\n');
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(() => {
+            $('#copyMsg').textContent = 'Orcamento copiado.';
+          }).catch(() => fallbackCopy(text));
+        } else {
+          fallbackCopy(text);
+        }
+      });
+    }
+
     function updateTypeControls() {
-      els.chargeOptions.hidden = els.partType.value !== 'carga';
-      renderParts();
-      renderQuote();
+      const isCarga = els.partType.value === 'carga';
+      els.chargeOptions.hidden = !isCarga;
+      els.modelInputWrap.hidden = isCarga;
+      els.autoSearchBtn.hidden = isCarga;
+
+      if (isCarga) {
+        state.parts = [];
+        state.filtered = [];
+        state.selectedKey = '';
+        renderParts();
+        updateMetrics();
+        renderChargeQuote();
+      } else {
+        renderParts();
+        renderQuote();
+      }
     }
 
     function clearLoadedParts(message) {
@@ -1494,11 +1553,17 @@ SEM ARO NACIONAL WEFIX
     });
     els.partType.addEventListener('change', () => {
       updateTypeControls();
-      clearLoadedParts('Digite o modelo e clique em Buscar.');
+      if (els.partType.value !== 'carga') {
+        clearLoadedParts('Digite o modelo e clique em Buscar.');
+      }
     });
     els.chargeKind.addEventListener('change', () => {
-      renderParts();
-      renderQuote();
+      if (els.partType.value === 'carga') {
+        renderChargeQuote();
+      } else {
+        renderParts();
+        renderQuote();
+      }
     });
     els.sampleBtn.addEventListener('click', () => {
       els.supplierText.value = sampleText;
