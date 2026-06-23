@@ -1376,6 +1376,7 @@ SEM ARO NACIONAL WEFIX
       if (!message) return '';
       const content = message.content || message;
       if (typeof content === 'string') return content;
+      if (typeof content.markdown === 'string') return content.markdown;
       if (typeof content.text === 'string') return content.text;
       if (typeof content.plainText === 'string') return content.plainText;
       if (content.richText) return richTextToText(content.richText);
@@ -1385,6 +1386,10 @@ SEM ARO NACIONAL WEFIX
         return div.textContent || '';
       }
       return richTextToText(content);
+    }
+
+    function extractMessages(response) {
+      return (response.messages || response.output || []).map(messageToText).filter(Boolean).join('\n');
     }
 
     async function continueTypebot(sessionId, message) {
@@ -1408,9 +1413,9 @@ SEM ARO NACIONAL WEFIX
       const sessionId = started.sessionId;
       if (!sessionId) throw new Error('Fornecedor nao iniciou a conversa.');
 
-      await continueTypebot(sessionId, 'iplay');
+      const iplayResult = await continueTypebot(sessionId, 'iplay');
       const result = await continueTypebot(sessionId, query);
-      const rawText = (result.messages || []).map(messageToText).filter(Boolean).join('\n');
+      const rawText = extractMessages(result) || extractMessages(iplayResult);
       if (!rawText) throw new Error('Fornecedor respondeu sem lista.');
       return rawText;
     }

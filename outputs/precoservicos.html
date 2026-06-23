@@ -1485,11 +1485,16 @@ _Agradecemos a preferência!_ 🙏`;
       if (!message) return '';
       const content = message.content || message;
       if (typeof content === 'string') return content;
+      if (typeof content.markdown === 'string') return content.markdown;
       if (typeof content.text === 'string') return content.text;
       if (typeof content.plainText === 'string') return content.plainText;
       if (content.richText) return richTextToText(content.richText);
       if (content.html) { const d = document.createElement('div'); d.innerHTML = content.html; return d.textContent || ''; }
       return richTextToText(content);
+    }
+
+    function extractMessages(response) {
+      return (response.messages || response.output || []).map(messageToText).filter(Boolean).join('\n');
     }
 
     async function continueTypebot(sessionId, message) {
@@ -1504,9 +1509,9 @@ _Agradecemos a preferência!_ 🙏`;
       const started = await postTypebot('/typebots/iplay-frg-web/startChat', { textBubbleContentFormat: 'markdown' });
       const sessionId = started.sessionId;
       if (!sessionId) throw new Error('Fornecedor não iniciou a conversa.');
-      await continueTypebot(sessionId, 'iplay');
+      const iplayResult = await continueTypebot(sessionId, 'iplay');
       const result = await continueTypebot(sessionId, query);
-      const rawText = (result.messages || []).map(messageToText).filter(Boolean).join('\n');
+      const rawText = extractMessages(result) || extractMessages(iplayResult);
       if (!rawText) throw new Error('Fornecedor respondeu sem lista.');
       return rawText;
     }
